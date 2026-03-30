@@ -1,0 +1,15 @@
+langchain
+qdrant-client
+requests
+pandas
+python-dotenv
+groq
+openai
+fastembed
+onnxruntime==1.20.1
+langchain-text-splitters
+langgraph
+streamlit
+beautifulsoup4
+lxml
+yfinance

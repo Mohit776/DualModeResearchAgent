@@ -1,0 +1,26 @@
+# oops_Tree - Financial Intelligence Agent Architecture
+
+## 1. Core Concept & Orchestration
+oops_Tree is an automated equity research agent orchestrated by LangGraph. It runs in two distinct pathways ("quick" and "deep"), querying live financial data and extracting qualitative risk factors from regulatory filings or annual reports using Retrieval-Augmented Generation (RAG).
+
+## 2. Global Stock Support & Data Fetching
+The system dynamically routes data requests based on the stock ticker:
+- **US Stocks (NYSE/NASDAQ):** Fetches financial data via Polygon.io. Automatically pulls the latest 10-K from SEC EDGAR.
+- **Indian Stocks (.NS / .BO):** Fetches financial statements, market data, and business/risk summaries using `yfinance`. Automatically bypasses the SEC requirement by generating risk documents from live Yahoo Finance data.
+- **Dynamic Year Alignment:** The user-selected "Filing Year" globally controls the pipeline, ensuring that financial data fetched (from Polygon/yfinance) exactly matches the RAG knowledge pool for accurate YoY growth comparisons.
+
+## 3. Dual Model Routing & Inference
+The pipeline dynamically routes language tasks to different LLMs based on the desired depth and complexity:
+
+- **Quick Mode (Low Latency):** Uses Groq (specifically `llama-3.3-70b-versatile`) to rapidly perform basic tasks like analyzing KPIs and summarizing risk chunks.
+- **Deep Mode (High Reasoning):** Uses Zhipu AI's flagship model `glm-4-plus`. The GLM (General Language Model) is leveraged exclusively for deep financial thinking:
+   * **DCF Parameter Generation:** Estimating cash flow projections, growth rates, and cost of capital, grounded by real shares outstanding and net debt data.
+   * **Investment Thesis:** Synthesizing financial and risk data into robust bull and bear cases.
+   * **Reflection / Quality Review:** Acting as a "Senior Analyst" to review the report for contradictions and hallucinated data before finalization.
+   * **Confidence Scoring:** Generating a confidence-weighted investment conclusion (e.g., BUY/HOLD/SELL).
+
+## 4. Deterministic Quantitative Engine
+To prevent LLM math hallucinations, the system uses a deterministic Python quantitative engine (`core/quant_tools.py`) for the heavy lifting. The LLM estimates the *parameters* (like terminal growth rate), but Python calculates the actual WACC, Enterprise Value, Equity Value, Implied Share Price, and generates the Sensitivity Analysis matrix.
+
+## 5. Retrieval-Augmented Generation (RAG)
+Risk documents (10-K extracts or yfinance risk summaries) are chunked using LangChain and embedded via `fastembed` into a local persistent Qdrant vector database. The agent uses hybrid search to retrieve relevant context to ground its financial analysis and citations.

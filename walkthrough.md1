@@ -1,0 +1,61 @@
+# oops_Tree Production-Grade Upgrade — Walkthrough
+
+## Summary
+
+Upgraded oops_Tree from a linear LangGraph pipeline with a single LLM to a production-grade financial research agent with **8 major features**.
+
+## Files Changed
+
+| File | Action | What Changed |
+|---|---|---|
+| [config.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/config.py) | Modified | Added Zhipu API key, base URL, model routing constants |
+| [llm.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/llm.py) | Rewritten | Dual-model routing ([_chat()](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/llm.py#15-32) factory), 3 new functions: [generate_dcf_params](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/llm.py#111-142), [review_report](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/llm.py#144-174), [generate_confidence_score](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/llm.py#176-203) |
+| [rag.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/rag.py) | Rewritten | Persistent `./db`, hybrid dense+sparse vectors, BM25-lite tokenization, RRF fusion, metadata grounding, citation metadata |
+| [quant_tools.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/quant_tools.py) | **New** | Deterministic [execute_dcf()](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/quant_tools.py#46-104), [compute_wacc()](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/quant_tools.py#12-44), [run_sensitivity_analysis()](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/quant_tools.py#106-156) |
+| [reflection.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/reflection.py) | **New** | Senior Analyst [reflect()](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/reflection.py#13-53) with max 2 revision cycles |
+| [workflow.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/workflow.py) | Rewritten | 10 nodes, cyclical reflection loop, DCF/WACC node, confidence scoring |
+| [frontend.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/frontend.py) | Rewritten | DCF cards, sensitivity table, confidence banner, reflection status, citation panel, 6 landing features |
+| [requirements.txt](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/requirements.txt) | Modified | Added `openai` package |
+| [app.py](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/app.py) | Modified | Updated [ingest_document](file:///c:/Users/Asus/Downloads/ops_Tree/oops_Tree/core/rag.py#77-115) call with `doc_type` |
+
+## Architecture (Deep Mode)
+
+```mermaid
+graph TD
+    A["fetch_financials"] --> B["analyze_financials"]
+    B --> C["retrieve_risks<br/>(hybrid: dense + sparse)"]
+    C --> D["summarize_risks"]
+    D -->|deep| E["peer_comparison"]
+    D -->|quick| J["assemble_report"]
+    E --> F["quant_analysis<br/>(DCF + WACC)"]
+    F --> G["thesis"]
+    G --> H["reflection<br/>(Senior Analyst)"]
+    H -->|rejected & rev < 2| G
+    H -->|approved| I["confidence_scoring"]
+    I --> J
+    J --> K["END"]
+```
+
+## Key Design Decisions
+
+- **GLM-4.7 via OpenAI SDK**: Uses `openai` Python package with `base_url` pointed to Zhipu's OpenAI-compatible endpoint — no separate SDK needed
+- **Sparse vectors**: BM25-lite with hash-based term indexing (no external tokenizer dependency)
+- **Reflection loop**: Max 2 cycles to prevent infinite loops; graceful fallback on errors
+- **DCF is deterministic**: LLM only estimates input parameters; all math runs in pure Python
+
+## Verification Results
+
+| Check | Status | Detail |
+|---|---|---|
+| Config loading | ✅ | Both API keys, model constants |
+| Quant tools | ✅ | WACC = 8.18%, DCF = $16.74 |
+| LLM module | ✅ | All 6 functions importable |
+| Reflection module | ✅ | Import + max-revision logic |
+| Torch DLL (pre-existing) | ⚠️ | Unrelated to changes |
+
+## How to Run
+
+```bash
+cd c:\Users\Asus\Downloads\ops_Tree\oops_Tree
+streamlit run frontend.py
+```
