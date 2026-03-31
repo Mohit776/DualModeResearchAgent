@@ -17,12 +17,18 @@ def get_us_financials(ticker, filing_year=None):
         url += f"&period_of_report_date.lte={filing_year}-12-31"
     url += f"&apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
-    return response.json()
+    data = response.json()
+    
+    if data.get("status") == "ERROR" or "error" in data:
+        error_msg = data.get('error', 'Unknown Error')
+        raise ValueError(f"Polygon API Error: {error_msg}")
+        
+    return data
 
 
-def get_indian_financials(ticker, filing_year=None):
+def get_yfinance_financials(ticker, filing_year=None):
     """
-    Fetch trailing 2 years of financials using yfinance for Indian stocks (.NS / .BO).
+    Fetch trailing 2 years of financials using yfinance.
     Returns data mapped to the same structure as Polygon's API so `compute_kpis` works directly.
     """
     stock = yf.Ticker(ticker)
@@ -118,8 +124,13 @@ def get_financials(ticker, filing_year=None):
     """Router for fetching financials based on exchange."""
     sym = ticker.upper()
     if sym.endswith(".NS") or sym.endswith(".BO"):
-        return get_indian_financials(sym, filing_year=filing_year)
-    return get_us_financials(sym, filing_year=filing_year)
+        return get_yfinance_financials(sym, filing_year=filing_year)
+    
+    try:
+        return get_us_financials(sym, filing_year=filing_year)
+    except Exception as e:
+        print(f"Polygon API failed ({e}). Falling back to yfinance for US ticker {sym}.")
+        return get_yfinance_financials(sym, filing_year=filing_year)
 
 
 def _extract_period(result):

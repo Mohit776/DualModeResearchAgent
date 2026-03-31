@@ -5,6 +5,7 @@ from core.workflow import build_graph
 from core.sec_fetch import fetch_latest_10k_risks, fetch_indian_stock_risks
 
 # Single accessor — the global singleton in rag.py ensures one instance per process
+@st.cache_resource(show_spinner=False)
 def get_qdrant_client():
     return get_client()
 
