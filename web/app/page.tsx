@@ -16,7 +16,8 @@ export default function Home() {
     setError("");
     setReportData(null);
     try {
-      const res = await fetch("http://localhost:8000/api/analyze", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticker, mode, filing_year: 2023 }),

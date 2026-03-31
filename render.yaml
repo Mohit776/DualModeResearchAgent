@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: dualmode-api
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn api:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: POLYGON_API_KEY
+        sync: false
+      - key: HF_TOKEN
+        sync: false
+      - key: ZHIPU_API_KEY
+        sync: false
+
+  - type: web
+    name: dualmode-web
+    env: node
+    rootDir: web
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: dualmode-api
+          envVarKey: RENDER_EXTERNAL_URL
