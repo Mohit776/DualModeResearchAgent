@@ -1,28 +1,38 @@
 services:
+  # 1. Backend API Service (FastAPI)
   - type: web
-    name: dualmode-api
-    env: python
+    name: quant-agent-api
+    plan: free
+    runtime: python
+    rootDir: .
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn api:app --host 0.0.0.0 --port $PORT"
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.9
       - key: GROQ_API_KEY
         sync: false
       - key: POLYGON_API_KEY
         sync: false
-      - key: HF_TOKEN
-        sync: false
-      - key: ZHIPU_API_KEY
-        sync: false
+    # Optional: Attach a persistent disk if you want Qdrant vectors to survive restarts.
+    # disk:
+    #   name: qdrant_storage
+    #   mountPath: /opt/render/project/src/qdrant_storage
+    #   sizeGB: 1
 
+  # 2. Frontend Service (Next.js)
   - type: web
-    name: dualmode-web
-    env: node
+    name: quant-agent-web
+    plan: free
+    runtime: node
     rootDir: web
     buildCommand: "npm install && npm run build"
     startCommand: "npm start"
     envVars:
+      - key: NODE_VERSION
+        value: 20
       - key: NEXT_PUBLIC_API_URL
         fromService:
           type: web
-          name: dualmode-api
+          name: quant-agent-api
           envVarKey: RENDER_EXTERNAL_URL
