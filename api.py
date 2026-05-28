@@ -13,11 +13,16 @@ app = FastAPI(title="Quant Agent API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For v1, allow the local Next.js server
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}
+
 
 class AnalyzeRequest(BaseModel):
     ticker: str
