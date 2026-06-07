@@ -170,7 +170,7 @@ def reflection_node(state: AgentState) -> AgentState:
         "dcf_valuation": state.get("dcf_result", {}),
     }
 
-    result = reflect(partial_report, state["financials"], revision_count, mode="deep")
+    result = reflect(partial_report, state["financials"], revision_count, mode=state.get("mode", "deep"))
     state["reflection"] = result
     state["revision_count"] = result.get("revision_count", revision_count + 1)
     return state
@@ -188,7 +188,7 @@ def confidence_scoring_node(state: AgentState) -> AgentState:
     reflection = state.get("reflection", {})
 
     try:
-        confidence = generate_confidence_score(partial_report, reflection, mode="deep")
+        confidence = generate_confidence_score(partial_report, reflection, mode=state.get("mode", "deep"))
     except Exception:
         confidence = {
             "overall_confidence": "MEDIUM",

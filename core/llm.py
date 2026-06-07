@@ -15,7 +15,7 @@ _zhipu_client = OpenAI(api_key=ZHIPU_API_KEY, base_url=ZHIPU_BASE_URL)
 def _chat(mode: str, messages: list, temperature: float = 0.2, json_mode: bool = True):
     """Unified chat helper that routes to the correct LLM based on mode."""
     if mode == "deep":
-        client, model = _zhipu_client, DEEP_MODEL
+        client, model = _groq_client, QUICK_MODEL  # Zhipu out of credits; using Groq fallback
     else:
         client, model = _groq_client, QUICK_MODEL
 
