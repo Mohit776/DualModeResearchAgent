@@ -7,6 +7,7 @@ import {
   IconCheck, IconWarning, IconSpinner, IconHistory, IconUpload,
   IconClose, IconBarChart, IconChevronDown, IconChevronUp, IconLink,
 } from "./icons";
+import Chatbot from "./Chatbot";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1141,6 +1142,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      <Chatbot ticker={reportData?.ticker} reportContext={reportData?.report} />
     </div>
   );
 }

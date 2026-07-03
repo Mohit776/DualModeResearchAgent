@@ -2,12 +2,15 @@ import os
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional, Any
 import uvicorn
 import json
+from groq import Groq
 
 from core.rag import create_collection, ingest_document, get_client, COLLECTION_NAME
 from core.workflow import build_graph
 from core.sec_fetch import fetch_latest_10k_risks, fetch_indian_stock_risks
+from core.config import GROQ_API_KEY
 
 app = FastAPI(title="Quant Agent API")
 
@@ -115,5 +118,44 @@ async def upload_document(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
         
+class ChatRequest(BaseModel):
+    message: str
+    ticker: Optional[str] = None
+    report_context: Optional[Any] = None
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY is not configured")
+
+    system_prompt = (
+        "You are QuantBot, an expert AI stock market and equity research assistant. "
+        "Answer the user's questions clearly, concisely, and accurately. "
+        "Use bullet points for readability where appropriate."
+    )
+
+    if req.ticker and req.report_context:
+        report_str = json.dumps(req.report_context)
+        system_prompt += (
+            f"\n\nContext: The user is currently viewing a financial report for {req.ticker}. "
+            f"Here is the report data: {report_str}\n"
+            "If the user asks about the current stock or report, use this data to answer."
+        )
+
+    client = Groq(api_key=GROQ_API_KEY)
+    try:
+        response = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": req.message}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_tokens=1024,
+        )
+        return {"success": True, "reply": response.choices[0].message.content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
