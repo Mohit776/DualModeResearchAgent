@@ -1,18 +1,30 @@
+# ================ AI & LLMs =====================================
 langchain
-qdrant-client
-requests
-pandas
-python-dotenv
-groq
-openai
-fastembed
-onnxruntime==1.20.1
 langchain-text-splitters
 langgraph
+groq
+openai
 
+# ================ VECTOR DB & EMBEDDINGS ======================
+qdrant-client
+fastembed
+onnxruntime==1.20.1
+
+# ================ DATA & UTILITIES ============================
+pandas
+python-dotenv
+requests
+pydantic
+
+# ================ SCRAPING & FINANCE ==========================
 beautifulsoup4
 lxml
 yfinance
+
+# ================ API & SERVER ================================
 fastapi
 uvicorn
 python-multipart
+
+# ================ OBSERVABILITY ================================
+logfire[fastapi,requests]

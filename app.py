@@ -14,8 +14,8 @@ if __name__ == "__main__":
 
     graph = build_graph()
 
-    # Change mode to "quick" to skip peer comparison + thesis + DCF + reflection
-    final_state = graph.invoke({"ticker": "NVDA", "mode": "quick", "filing_year": 2023})
+    # Skip peer comparison + thesis + DCF + reflection by changing mode (now removed)
+    final_state = graph.invoke({"ticker": "NVDA", "filing_year": 2024})
 
     print("\nFinal Structured Report")
     print("------------------------")

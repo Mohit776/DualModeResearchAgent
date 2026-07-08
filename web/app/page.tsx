@@ -24,7 +24,7 @@ interface FinancialData {
 
 interface ReportData {
   ticker?: string;
-  mode?: string;
+
   financial_overview?: { revenue_growth?: string; operating_margin_trend?: string };
   risk_assessment?: { industry_risks?: string[]; operational_risks?: string[]; regulatory_risks?: string[] };
   peer_comparison?: {
@@ -57,7 +57,7 @@ interface ReportData {
 interface ApiResponse {
   success?: boolean;
   ticker?: string;
-  mode?: string;
+
   filing_year?: number;
   financials?: FinancialData;
   report?: ReportData;
@@ -69,13 +69,7 @@ const POPULAR_TICKERS = ["AAPL", "NVDA", "TSLA", "MSFT", "RELIANCE.NS"];
 const HISTORY_KEY = "qa_history";
 const MAX_HISTORY = 5;
 
-const STEPS_QUICK = [
-  "Fetching financial data from Polygon",
-  "Analyzing KPIs",
-  "Retrieving 10-K excerpts (hybrid search)",
-  "Summarizing risk factors",
-  "Assembling final report",
-];
+
 const STEPS_DEEP = [
   "Fetching financial data from Polygon",
   "Analyzing KPIs with deep model",
@@ -371,8 +365,6 @@ function StepProgress({ steps, currentStep }: { steps: string[]; currentStep: nu
 
 export default function Home() {
   const [ticker,      setTicker      ] = useState("NVDA");
-  const [mode,        setMode        ] = useState<"quick" | "deep">("deep");
-  const [filingYear,  setFilingYear  ] = useState(2023);
   const [loading,     setLoading     ] = useState(false);
   const [currentStep, setCurrentStep ] = useState(0);
   const [reportData,  setReportData  ] = useState<ApiResponse | null>(null);
@@ -403,12 +395,12 @@ export default function Home() {
   // Simulate step progression while loading (ticks every ~3s)
   useEffect(() => {
     if (!loading) { setCurrentStep(0); return; }
-    const steps = mode === "deep" ? STEPS_DEEP : STEPS_QUICK;
+    const steps = STEPS_DEEP;
     const interval = setInterval(() => {
       setCurrentStep(s => (s < steps.length - 1 ? s + 1 : s));
     }, 3500);
     return () => clearInterval(interval);
-  }, [loading, mode]);
+  }, [loading]);
 
   const runAnalysis = async (overrideTicker?: string) => {
     const t = (overrideTicker ?? ticker).toUpperCase().trim();
@@ -427,14 +419,14 @@ export default function Home() {
         const form = new FormData();
         form.append("file", uploadFile);
         form.append("ticker", t);
-        form.append("year", String(filingYear));
+        form.append("year", new Date().getFullYear().toString());
         await fetch(`${apiUrl}/api/upload`, { method: "POST", body: form });
       }
 
       const res = await fetch(`${apiUrl}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticker: t, mode, filing_year: filingYear }),
+        body: JSON.stringify({ ticker: t }),
       });
       const data: ApiResponse = await res.json();
       if (!res.ok) throw new Error((data as any).detail ?? "Analysis failed");
@@ -465,7 +457,7 @@ export default function Home() {
   const opmDelta = opm - opmPrev;
   const lyLabel  = String(fin.latest_period ?? "Latest").slice(0, 4);
   const pyLabel  = String(fin.prev_period   ?? "Prev"  ).slice(0, 4);
-  const steps    = mode === "deep" ? STEPS_DEEP : STEPS_QUICK;
+  const steps    = STEPS_DEEP;
   const conf     = report.investment_conclusion;
   const confLevel= conf?.overall_confidence ?? "MEDIUM";
   const confScore= conf?.confidence_score ?? 0.5;
@@ -519,36 +511,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mode Selector */}
-        <div>
-          <p className="section-label">Analysis Mode</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {[
-              { val: "quick" as const, title: "Quick",  desc: "Fast KPI summary via Groq LLM" },
-              { val: "deep"  as const, title: "Deep",   desc: "DCF + thesis + peer comparison + reflection" },
-            ].map(m => (
-              <div
-                key={m.val}
-                className={`mode-card ${mode === m.val ? "selected" : ""}`}
-                onClick={() => setMode(m.val)}
-              >
-                <p className="mode-title">{m.title}</p>
-                <p className="mode-desc">{m.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Filing Year */}
-        <div>
-          <p className="section-label">Filing Year</p>
-          <input
-            className="field-input"
-            type="number" min={2000} max={2030}
-            value={filingYear}
-            onChange={e => setFilingYear(Number(e.target.value))}
-          />
-        </div>
 
         {/* File Upload */}
         <div>
@@ -615,7 +578,7 @@ export default function Home() {
 
         <div style={{ flex: 1 }} />
         <p style={{ fontSize: "0.68rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>
-          Powered by Groq · GLM-4 · Qdrant · LangGraph
+          Powered by Groq · Qdrant · LangGraph
         </p>
       </aside>
 
@@ -659,13 +622,7 @@ export default function Home() {
               }}>
                 {reportData.ticker}
               </span>
-              <span style={{
-                background: "rgba(118,171,174,0.12)", color: "var(--accent)",
-                padding: "0.25rem 0.85rem", borderRadius: "99px",
-                fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase",
-              }}>
-                {reportData.mode} mode
-              </span>
+
               <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", color: "var(--success)", fontSize: "0.82rem" }}>
                 <IconCheck size={14} /> Analysis complete
               </span>
@@ -711,7 +668,7 @@ export default function Home() {
             </div>
             <StepProgress steps={steps} currentStep={currentStep} />
             <p style={{ marginTop: "1.2rem", fontSize: "0.8rem", color: "var(--fg-muted)" }}>
-              Deep mode takes 30–60 seconds. Quick mode is 10–15 seconds.
+              Deep mode takes 30–60 seconds.
             </p>
           </div>
         )}
@@ -733,7 +690,7 @@ export default function Home() {
             {/* Feature grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
               {[
-                { Icon: IconChart,  title: "Dual-Model AI",      desc: "Groq for speed, GLM-4 for deep reasoning. Automatic routing based on mode." },
+                { Icon: IconChart,  title: "AI-Powered",      desc: "Groq for fast execution and high reasoning." },
                 { Icon: IconSearch, title: "Hybrid RAG",         desc: "Dense + sparse vectors in Qdrant with metadata grounding. Zero cross-contamination." },
                 { Icon: IconCalc,   title: "DCF Valuation",      desc: "Deterministic DCF, WACC, and sensitivity analysis. No LLM math guessing." },
                 { Icon: IconShield, title: "Reflection Loop",    desc: "Senior Analyst AI reviews for contradictions and hallucinations before finalizing." },
@@ -962,7 +919,7 @@ export default function Home() {
                 })() : (
                   <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
                     <IconUsers size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
-                    <p>Peer comparison is only available in Deep mode.</p>
+                    <p>Peer comparison data is not available.</p>
                   </div>
                 )}
               </div>
@@ -1020,7 +977,7 @@ export default function Home() {
                 ) : (
                   <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
                     <IconCalc size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
-                    <p>Valuation data is only available in Deep mode.</p>
+                    <p>Valuation data is not available.</p>
                     {report.dcf_valuation?.error && (
                       <p style={{ color: "var(--danger)", marginTop: "0.5rem", fontSize: "0.85rem" }}>
                         Error: {report.dcf_valuation.error}
@@ -1069,7 +1026,7 @@ export default function Home() {
                 ) : (
                   <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
                     <IconBulb size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
-                    <p>Investment thesis is only available in Deep mode.</p>
+                    <p>Investment thesis is not available.</p>
                   </div>
                 )}
               </div>
@@ -1116,7 +1073,7 @@ export default function Home() {
                   );
                 })() : (
                   <div style={{ textAlign: "center", padding: "2rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
-                    <p>Senior Analyst Review is only available in Deep mode.</p>
+                    <p>Senior Analyst Review is not available.</p>
                   </div>
                 )}
 

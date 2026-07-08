@@ -1,39 +1,55 @@
 import json
 from groq import Groq
-from openai import OpenAI
 from .config import (
-    GROQ_API_KEY, ZHIPU_API_KEY, ZHIPU_BASE_URL,
-    QUICK_MODEL, DEEP_MODEL,
+    GROQ_API_KEY,
+    GROQ_FALLBACK_API_KEY,
+    DEEP_MODEL,
 )
+from .observability import logfire
 
 # ── LLM Clients ──────────────────────────────────────────────────────────────
 
 _groq_client = Groq(api_key=GROQ_API_KEY)
-_zhipu_client = OpenAI(api_key=ZHIPU_API_KEY, base_url=ZHIPU_BASE_URL)
+_groq_fallback_client = Groq(api_key=GROQ_FALLBACK_API_KEY) if GROQ_FALLBACK_API_KEY else None
 
 
-def _chat(mode: str, messages: list, temperature: float = 0.2, json_mode: bool = True):
-    """Unified chat helper that routes to the correct LLM based on mode."""
-    if mode == "deep":
-        client, model = _groq_client, QUICK_MODEL  # Zhipu out of credits; using Groq fallback
-    else:
-        client, model = _groq_client, QUICK_MODEL
-
+def _chat(messages: list, temperature: float = 0.2, json_mode: bool = True):
+    """Unified chat helper that routes to the correct LLM."""
     kwargs = dict(
-        model=model,
+        model=DEEP_MODEL,
         messages=messages,
         temperature=temperature,
     )
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
 
-    response = client.chat.completions.create(**kwargs)
-    return response.choices[0].message.content
+    with logfire.span(
+        "🧠 llm.groq.chat",
+        model=DEEP_MODEL,
+        n_messages=len(messages),
+        temperature=temperature,
+    ) as span:
+        try:
+            response = _groq_client.chat.completions.create(**kwargs)
+        except Exception as e:
+            if _groq_fallback_client:
+                logfire.warn("⚠️ Primary Groq client failed, using fallback", error=str(e))
+                response = _groq_fallback_client.chat.completions.create(**kwargs)
+            else:
+                raise e
+
+        usage = response.usage
+        if usage:
+            span.set_attribute("input_tokens",  usage.prompt_tokens)
+            span.set_attribute("output_tokens", usage.completion_tokens)
+            span.set_attribute("total_tokens",  usage.total_tokens)
+
+        return response.choices[0].message.content
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def explain_kpis(ticker: str, kpis: dict, mode: str = "quick") -> str:
+def explain_kpis(ticker: str, kpis: dict) -> str:
     latest_period = kpis.get('latest_period', 'unknown')
     prev_period = kpis.get('prev_period', 'unknown')
     prompt = f"""
@@ -61,10 +77,10 @@ def explain_kpis(ticker: str, kpis: dict, mode: str = "quick") -> str:
       "operating_margin_trend": "short string explaining operating margin trend between {prev_period} and {latest_period}"
     }}
     """
-    return _chat(mode, [{"role": "user", "content": prompt}], temperature=0.2)
+    return _chat([{"role": "user", "content": prompt}], temperature=0.2)
 
 
-def summarize_risks(chunks: list, mode: str = "quick") -> str:
+def summarize_risks(chunks: list) -> str:
     context = "\n\n".join(chunks)
     max_chars = 8000
     if len(context) > max_chars:
@@ -89,10 +105,10 @@ Return the output exactly as JSON:
 
 Do not include anything outside the JSON.
 """
-    return _chat(mode, [{"role": "user", "content": prompt}], temperature=0.2)
+    return _chat([{"role": "user", "content": prompt}], temperature=0.2)
 
 
-def generate_thesis(ticker: str, financials: dict, risks: dict, mode: str = "deep") -> dict:
+def generate_thesis(ticker: str, financials: dict, risks: dict) -> dict:
     prompt = f"""
     You are an equity research analyst.
 
@@ -110,11 +126,11 @@ def generate_thesis(ticker: str, financials: dict, risks: dict, mode: str = "dee
       "bear_case": "short paragraph"
     }}
     """
-    result = _chat(mode, [{"role": "user", "content": prompt}], temperature=0.3)
+    result = _chat([{"role": "user", "content": prompt}], temperature=0.3)
     return json.loads(result)
 
 
-def generate_dcf_params(ticker: str, financials: dict, mode: str = "deep") -> dict:
+def generate_dcf_params(ticker: str, financials: dict) -> dict:
     """Ask the LLM to estimate reasonable DCF input parameters from financials."""
     # Use real shares outstanding and net debt from actual data
     real_shares = financials.get("shares_outstanding", 0)
@@ -155,7 +171,7 @@ def generate_dcf_params(ticker: str, financials: dict, mode: str = "deep") -> di
 
     Use realistic estimates. All decimals should be ratios (e.g. 0.10 for 10%).
     """
-    result = _chat(mode, [{"role": "user", "content": prompt}], temperature=0.2)
+    result = _chat([{"role": "user", "content": prompt}], temperature=0.2)
     parsed = json.loads(result)
 
     # Force override with real data if available (don't trust the LLM for these)
@@ -194,11 +210,11 @@ def review_report(report: dict, financials: dict, mode: str = "deep") -> dict:
     If the report is accurate and complete, set approved to true and leave
     issues_found and corrections as empty arrays.
     """
-    result = _chat(mode, [{"role": "user", "content": prompt}], temperature=0.1)
+    result = _chat([{"role": "user", "content": prompt}], temperature=0.1)
     return json.loads(result)
 
 
-def generate_confidence_score(report: dict, reflection: dict, mode: str = "deep") -> dict:
+def generate_confidence_score(report: dict, reflection: dict) -> dict:
     """Generate a confidence-weighted conclusion for the investment memo."""
     prompt = f"""
     You are a senior portfolio strategist.
@@ -223,5 +239,5 @@ def generate_confidence_score(report: dict, reflection: dict, mode: str = "deep"
       "recommended_action": "BUY" or "HOLD" or "SELL" or "FURTHER_RESEARCH"
     }}
     """
-    result = _chat(mode, [{"role": "user", "content": prompt}], temperature=0.2)
+    result = _chat([{"role": "user", "content": prompt}], temperature=0.2)
     return json.loads(result)

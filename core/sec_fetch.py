@@ -1,6 +1,7 @@
 import warnings
 import requests
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+from .observability import logfire
 
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
@@ -43,13 +44,41 @@ def download_10k(cik, accession, document):
 
 def extract_risk_factors(html):
     soup = BeautifulSoup(html, features="xml")
+    text = soup.get_text(separator=" ", strip=True)
+    text_lower = text.lower()
 
-    text = soup.get_text()
+    # Find all occurrences of "item 1a"
+    starts = []
+    i = 0
+    while True:
+        idx = text_lower.find("item 1a", i)
+        if idx == -1:
+            break
+        starts.append(idx)
+        i = idx + 1
 
-    start = text.lower().find("item 1a. risk factors")
-    end = text.lower().find("item 1b.")
+    if not starts:
+        logfire.warn("Could not find Item 1A, falling back to full document prefix")
+        return text[:50000]
 
-    return text[start:end]
+    # Find the largest block between an "item 1a" and the next "item 1b" or "item 2"
+    best_text = ""
+    for start in starts:
+        end = text_lower.find("item 1b", start)
+        if end == -1:
+            end = text_lower.find("item 2", start)
+        
+        if end != -1 and end > start:
+            chunk = text[start:end]
+            if len(chunk) > len(best_text):
+                best_text = chunk
+
+    if len(best_text) < 1000:
+        # If the best we found is still suspiciously small, fallback
+        logfire.warn("Best Item 1A match was too small, falling back to 50k chars from last known start")
+        return text[starts[-1]:starts[-1]+50000]
+
+    return best_text
 
 
 def fetch_latest_10k_risks(ticker):
@@ -58,11 +87,14 @@ def fetch_latest_10k_risks(ticker):
     Returns:
         tuple: (risk_text: str, filing_year: int)
     """
-    cik = get_cik(ticker)
-    accession, document, filing_year = get_latest_10k_metadata(cik)
-    html = download_10k(cik, accession, document)
-    risk_text = extract_risk_factors(html)
-    return risk_text, filing_year
+    with logfire.span("📄 sec.fetch_10k", ticker=ticker):
+        cik = get_cik(ticker)
+        accession, document, filing_year = get_latest_10k_metadata(cik)
+        html = download_10k(cik, accession, document)
+        risk_text = extract_risk_factors(html)
+        logfire.info("📄 Fetched 10-K for {ticker} ({year}), {n_chars} chars",
+                     ticker=ticker, year=filing_year, n_chars=len(risk_text))
+        return risk_text, filing_year
 
 
 def fetch_indian_stock_risks(ticker, filing_year=None):
@@ -74,76 +106,79 @@ def fetch_indian_stock_risks(ticker, filing_year=None):
     Returns:
         tuple: (risk_text: str, filing_year: int)
     """
-    import yfinance as yf
-    from datetime import datetime
+    with logfire.span("🇳 sec.fetch_indian_risks", ticker=ticker):
+        import yfinance as yf
+        from datetime import datetime
 
-    stock = yf.Ticker(ticker)
-    info = stock.info
+        stock = yf.Ticker(ticker)
+        info = stock.info
 
-    year = filing_year or datetime.now().year
-    company_name = info.get("longName", info.get("shortName", ticker))
-    sector = info.get("sector", "Unknown")
-    industry = info.get("industry", "Unknown")
-    summary = info.get("longBusinessSummary", "No business summary available.")
-    market_cap = info.get("marketCap", 0)
-    employees = info.get("fullTimeEmployees", "N/A")
-    country = info.get("country", "India")
-    currency = info.get("currency", "INR")
+        year = filing_year or datetime.now().year
+        company_name = info.get("longName", info.get("shortName", ticker))
+        sector = info.get("sector", "Unknown")
+        industry = info.get("industry", "Unknown")
+        summary = info.get("longBusinessSummary", "No business summary available.")
+        market_cap = info.get("marketCap", 0)
+        employees = info.get("fullTimeEmployees", "N/A")
+        country = info.get("country", "India")
+        currency = info.get("currency", "INR")
 
-    # Build a comprehensive risk-like document from available data
-    sections = []
+        # Build a comprehensive risk-like document from available data
+        sections = []
 
-    sections.append(f"COMPANY OVERVIEW — {company_name} ({ticker})")
-    sections.append(f"Sector: {sector} | Industry: {industry}")
-    sections.append(f"Country: {country} | Currency: {currency}")
-    if market_cap:
-        sections.append(f"Market Capitalization: {market_cap:,.0f} {currency}")
-    if employees != "N/A":
-        sections.append(f"Full-Time Employees: {employees:,}")
-    sections.append("")
+        sections.append(f"COMPANY OVERVIEW — {company_name} ({ticker})")
+        sections.append(f"Sector: {sector} | Industry: {industry}")
+        sections.append(f"Country: {country} | Currency: {currency}")
+        if market_cap:
+            sections.append(f"Market Capitalization: {market_cap:,.0f} {currency}")
+        if employees != "N/A":
+            sections.append(f"Full-Time Employees: {employees:,}")
+        sections.append("")
 
-    sections.append("BUSINESS SUMMARY AND RISK FACTORS")
-    sections.append(summary)
-    sections.append("")
+        sections.append("BUSINESS SUMMARY AND RISK FACTORS")
+        sections.append(summary)
+        sections.append("")
 
-    # Industry and operational risks derived from sector
-    sections.append("INDUSTRY AND OPERATIONAL RISKS")
-    sections.append(
-        f"The company operates in the {industry} industry within the {sector} sector. "
-        f"Key risks include regulatory changes in {country}, competitive pressures within "
-        f"the {industry} space, macroeconomic conditions affecting the {sector} sector, "
-        f"currency fluctuations impacting {currency}-denominated operations, and supply "
-        f"chain or operational disruptions."
-    )
-    sections.append("")
+        # Industry and operational risks derived from sector
+        sections.append("INDUSTRY AND OPERATIONAL RISKS")
+        sections.append(
+            f"The company operates in the {industry} industry within the {sector} sector. "
+            f"Key risks include regulatory changes in {country}, competitive pressures within "
+            f"the {industry} space, macroeconomic conditions affecting the {sector} sector, "
+            f"currency fluctuations impacting {currency}-denominated operations, and supply "
+            f"chain or operational disruptions."
+        )
+        sections.append("")
 
-    # Try to get recent news for additional risk context
-    try:
-        news = stock.news
-        if news:
-            sections.append("RECENT NEWS AND DEVELOPMENTS")
-            for article in news[:8]:
-                content = article.get("content", {})
-                title = content.get("title", article.get("title", ""))
-                summary_text = content.get("summary", "")
-                if title:
-                    sections.append(f"- {title}")
-                    if summary_text:
-                        sections.append(f"  {summary_text}")
-            sections.append("")
-    except Exception:
-        pass
+        # Try to get recent news for additional risk context
+        try:
+            news = stock.news
+            if news:
+                sections.append("RECENT NEWS AND DEVELOPMENTS")
+                for article in news[:8]:
+                    content = article.get("content", {})
+                    title = content.get("title", article.get("title", ""))
+                    summary_text = content.get("summary", "")
+                    if title:
+                        sections.append(f"- {title}")
+                        if summary_text:
+                            sections.append(f"  {summary_text}")
+                sections.append("")
+        except Exception:
+            pass
 
-    # Try to get major holders info
-    try:
-        holders = stock.major_holders
-        if holders is not None and not holders.empty:
-            sections.append("OWNERSHIP STRUCTURE")
-            for _, row in holders.iterrows():
-                sections.append(f"- {row.iloc[0]}: {row.iloc[1]}")
-            sections.append("")
-    except Exception:
-        pass
+        # Try to get major holders info
+        try:
+            holders = stock.major_holders
+            if holders is not None and not holders.empty:
+                sections.append("OWNERSHIP STRUCTURE")
+                for _, row in holders.iterrows():
+                    sections.append(f"- {row.iloc[0]}: {row.iloc[1]}")
+                sections.append("")
+        except Exception:
+            pass
 
-    risk_text = "\n".join(sections)
-    return risk_text, year
+        risk_text = "\n".join(sections)
+        logfire.info("🇳 Built Indian stock doc for {ticker} ({year}), {n_chars} chars",
+                     ticker=ticker, year=year, n_chars=len(risk_text))
+        return risk_text, year
