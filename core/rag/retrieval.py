@@ -2,13 +2,13 @@ from qdrant_client import models
 from ..observability import logfire
 from .client import get_client, COLLECTION_NAME
 from .embeddings import embed_single, build_sparse_vector
-from flashrank import Ranker, RerankRequest
 import os
 
 _ranker = None
 def get_ranker():
     global _ranker
     if _ranker is None:
+        from flashrank import Ranker
         # We store the models in ./db/flashrank_cache
         os.makedirs("./db/flashrank_cache", exist_ok=True)
         # Using TinyBERT (15MB) instead of MiniLM-L-12-v2 (100MB+) for Render Free Tier!
@@ -84,6 +84,7 @@ def retrieve_risks(
                 passages = [
                     {"id": i, "text": h["text"], "meta": h} for i, h in enumerate(hits)
                 ]
+                from flashrank import RerankRequest
                 rerankrequest = RerankRequest(query=query, passages=passages)
                 reranked_results = get_ranker().rerank(rerankrequest)
                 

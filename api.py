@@ -19,7 +19,7 @@ from core.observability import logfire  # noqa: F401 — side-effect import
 
 from core.rag import create_collection, ingest_document, get_client, COLLECTION_NAME
 from core.workflow import build_graph
-from core.sec_fetch import fetch_latest_10k_risks, fetch_indian_stock_risks
+from core.sec_fetch import fetch_latest_10k_risks
 from core.config import GROQ_API_KEY
 from core.llm import _chat
 from core.chatbot.chatbot import chat, ChatRequest
@@ -84,25 +84,17 @@ async def analyze_stock(req: AnalyzeRequest):
 
         # Auto-fetch and ingest
         if ticker.endswith(".NS") or ticker.endswith(".BO"):
-            try:
-                print(f"[RAG] Fetching Indian stock risks for {ticker}...")
-                risk_text, fetched_year = fetch_indian_stock_risks(ticker, filing_year=filing_year)
-                print(f"[RAG] Ingesting {len(risk_text)} chars into Qdrant for {ticker} ({fetched_year})...")
-                ingest_document(risk_text, ticker, fetched_year)
-                print(f"[RAG] Ingestion complete for {ticker}.")
-                filing_year = fetched_year
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Yahoo Finance fetch failed: {e}")
-        else:
-            try:
-                print(f"[RAG] Fetching 10-K risks from SEC for {ticker}...")
-                risk_text, fetched_year = fetch_latest_10k_risks(ticker)
-                print(f"[RAG] Ingesting {len(risk_text)} chars into Qdrant for {ticker} ({fetched_year})...")
-                ingest_document(risk_text, ticker, fetched_year)
-                print(f"[RAG] Ingestion complete for {ticker}.")
-                filing_year = fetched_year
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"SEC EDGAR fetch failed: {e}")
+            raise HTTPException(status_code=400, detail="Indian stocks are not supported on this lightweight server.")
+
+        try:
+            print(f"[RAG] Fetching 10-K risks from SEC for {ticker}...")
+            risk_text, fetched_year = fetch_latest_10k_risks(ticker)
+            print(f"[RAG] Ingesting {len(risk_text)} chars into Qdrant for {ticker} ({fetched_year})...")
+            ingest_document(risk_text, ticker, fetched_year)
+            print(f"[RAG] Ingestion complete for {ticker}.")
+            filing_year = fetched_year
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"SEC 10-K fetch failed: {e}")
 
     # Run LangGraph
     try:

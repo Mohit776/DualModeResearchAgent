@@ -3,7 +3,6 @@ import math
 import hashlib
 from collections import Counter
 from qdrant_client.models import SparseVector
-from fastembed import TextEmbedding 
 
 import requests
 from ..config import GEMINI_API, GEMINI_EMBED_MODEL, FALLBACK_EMBED_MODEL, EMBEDDING_DIM
@@ -15,6 +14,7 @@ def get_model():
     """Lazy-load fastembed TextEmbedding model."""
     global _model
     if _model is None:
+        from fastembed import TextEmbedding 
         _model = TextEmbedding(FALLBACK_EMBED_MODEL)
     return _model
 

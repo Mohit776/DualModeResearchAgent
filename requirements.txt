@@ -1,4 +1,4 @@
-# ================ AI & LLMs =====================================
+# ================ AI & LLMs ====================================
 langchain
 langchain-text-splitters
 langgraph
@@ -12,7 +12,6 @@ onnxruntime==1.20.1
 flashrank
 
 # ================ DATA & UTILITIES ============================
-pandas
 python-dotenv
 requests
 pydantic
@@ -20,7 +19,6 @@ pydantic
 # ================ SCRAPING & FINANCE ==========================
 beautifulsoup4
 lxml
-yfinance
 
 # ================ API & SERVER ================================
 fastapi

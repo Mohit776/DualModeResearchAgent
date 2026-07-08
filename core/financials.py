@@ -1,6 +1,4 @@
 import requests
-import yfinance as yf
-import pandas as pd
 from .config import POLYGON_API_KEY
 
 BASE = "https://api.polygon.io"
@@ -26,111 +24,13 @@ def get_us_financials(ticker, filing_year=None):
     return data
 
 
-def get_yfinance_financials(ticker, filing_year=None):
-    """
-    Fetch trailing 2 years of financials using yfinance.
-    Returns data mapped to the same structure as Polygon's API so `compute_kpis` works directly.
-    """
-    stock = yf.Ticker(ticker)
-    
-    # Financials dataframe is ordered latest year first
-    inc_stmt = stock.financials
-    
-    if inc_stmt is None or inc_stmt.empty:
-        raise ValueError(f"Not enough financial data found on Yahoo Finance for {ticker}")
-
-    # Filter columns to only include years <= filing_year if specified
-    if filing_year:
-        inc_stmt = inc_stmt[[c for c in inc_stmt.columns if c.year <= filing_year]]
-        if inc_stmt.empty or len(inc_stmt.columns) < 2:
-            raise ValueError(f"Not enough financial data for {ticker} up to year {filing_year}")
-
-    if len(inc_stmt.columns) < 2:
-        raise ValueError(f"Not enough financial data found on Yahoo Finance for {ticker}")
-
-    # Standardize column index to pick latest and previous
-    cols = inc_stmt.columns
-    latest_col = cols[0]
-    prev_col = cols[1]
-
-    def _get_val(df, row_name, col):
-        try:
-            val = df.loc[row_name, col]
-            if pd.isna(val):
-                return 0
-            return float(val)
-        except KeyError:
-            return 0
-
-    # Extract period dates from column timestamps
-    latest_date = str(latest_col.date()) if hasattr(latest_col, 'date') else str(latest_col)
-    prev_date = str(prev_col.date()) if hasattr(prev_col, 'date') else str(prev_col)
-
-    # Try to get shares outstanding and net debt from yfinance .info
-    try:
-        info = stock.info
-        shares_outstanding = float(info.get("sharesOutstanding", 0))
-    except Exception:
-        shares_outstanding = 0
-
-    # Get balance sheet for net debt calculation
-    try:
-        bal = stock.balance_sheet
-        if bal is not None and not bal.empty:
-            latest_bal_col = bal.columns[0]
-            total_debt = _get_val(bal, "Total Debt", latest_bal_col)
-            cash = _get_val(bal, "Cash And Cash Equivalents", latest_bal_col)
-            if total_debt == 0:
-                total_debt = _get_val(bal, "Long Term Debt", latest_bal_col)
-            net_debt = total_debt - cash
-        else:
-            net_debt = 0
-    except Exception:
-        net_debt = 0
-
-    # Map yfinance rows to Polygon structure
-    # yfinance uses "Total Revenue" and "Operating Income"
-    results = [
-        {
-            "period_of_report_date": latest_date,
-            "financials": {
-                "income_statement": {
-                    "revenues": {"value": _get_val(inc_stmt, "Total Revenue", latest_col)},
-                    "operating_income_loss": {"value": _get_val(inc_stmt, "Operating Income", latest_col)}
-                }
-            }
-        },
-        {
-            "period_of_report_date": prev_date,
-            "financials": {
-                "income_statement": {
-                    "revenues": {"value": _get_val(inc_stmt, "Total Revenue", prev_col)},
-                    "operating_income_loss": {"value": _get_val(inc_stmt, "Operating Income", prev_col)}
-                }
-            }
-        }
-    ]
-    
-    return {
-        "results": results,
-        "_market_data": {
-            "shares_outstanding": shares_outstanding,
-            "net_debt": net_debt,
-        }
-    }
-
-
 def get_financials(ticker, filing_year=None):
-    """Router for fetching financials based on exchange."""
+    """Fetch US financials."""
     sym = ticker.upper()
     if sym.endswith(".NS") or sym.endswith(".BO"):
-        return get_yfinance_financials(sym, filing_year=filing_year)
+        raise ValueError(f"Indian stocks ({sym}) are not supported in this lightweight version.")
     
-    try:
-        return get_us_financials(sym, filing_year=filing_year)
-    except Exception as e:
-        print(f"Polygon API failed ({e}). Falling back to yfinance for US ticker {sym}.")
-        return get_yfinance_financials(sym, filing_year=filing_year)
+    return get_us_financials(sym, filing_year=filing_year)
 
 
 def _extract_period(result):
@@ -239,16 +139,10 @@ def compute_kpis(data, filing_year=None):
 
 
 def get_company_sic(ticker):
-    """Return the SIC code and company name. Uses yfinance for Indian stocks."""
+    """Return the SIC code and company name."""
     sym = ticker.upper()
     if sym.endswith(".NS") or sym.endswith(".BO"):
-        try:
-            info = yf.Ticker(sym).info
-            name = info.get("longName", info.get("shortName", sym))
-            sector = info.get("sector", "Unknown Sector")
-            return sector, name
-        except Exception:
-            return None, sym
+        return None, sym
 
     # US (Polygon)
     url = f"{BASE}/v3/reference/tickers/{sym}?apiKey={POLYGON_API_KEY}"
