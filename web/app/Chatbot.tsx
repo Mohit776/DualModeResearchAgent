@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { IconMessageCircle, IconClose, IconSend, IconSpinner } from "./icons";
 
 interface Message {
-  role: "user" | "bot";
+  role: "user" | "assistant";
   content: string;
 }
 
@@ -43,15 +43,16 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
           message: text,
           ticker: ticker,
           report_context: reportContext,
+          history: messages,
         }),
       });
       
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail ?? "Failed to fetch response");
       
-      setMessages(prev => [...prev, { role: "bot", content: data.reply }]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err: any) {
-      setMessages(prev => [...prev, { role: "bot", content: `Error: ${err.message}` }]);
+      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${err.message}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -173,7 +174,7 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
                   padding: "0.6rem 0.8rem",
                   borderRadius: "var(--radius-md)",
                   borderBottomRightRadius: msg.role === "user" ? 0 : "var(--radius-md)",
-                  borderBottomLeftRadius: msg.role === "bot" ? 0 : "var(--radius-md)",
+                  borderBottomLeftRadius: msg.role === "assistant" ? 0 : "var(--radius-md)",
                   fontSize: "0.85rem",
                   lineHeight: 1.5,
                   whiteSpace: "pre-wrap"

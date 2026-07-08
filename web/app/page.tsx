@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import {
   IconChart, IconShield, IconUsers, IconCalc, IconBulb, IconSearch,
   IconRocket, IconDownload, IconTrendingUp, IconTrendingDown,
-  IconCheck, IconWarning, IconSpinner, IconHistory, IconUpload,
-  IconClose, IconBarChart, IconChevronDown, IconChevronUp, IconLink,
+  IconCheck, IconWarning, IconSpinner, IconHistory,
+  IconBarChart, IconChevronDown, IconChevronUp, IconLink,
 } from "./icons";
 import Chatbot from "./Chatbot";
 
@@ -263,7 +263,7 @@ function SensitivityGrid({ data, baseCase }: {
         ))}
         {/* Data rows */}
         {waccKeys.map(w => (
-          <>
+          <Fragment key={w}>
             <div key={`lbl-${w}`} className="sens-cell"
               style={{ color: "var(--accent)", fontWeight: 700, textAlign: "right" }}>{w}</div>
             {tgKeys.map(t => {
@@ -281,7 +281,7 @@ function SensitivityGrid({ data, baseCase }: {
                 </div>
               );
             })}
-          </>
+          </Fragment>
         ))}
       </div>
       <p style={{ fontSize: "0.72rem", color: "var(--fg-muted)", marginTop: "0.6rem" }}>
@@ -371,9 +371,7 @@ export default function Home() {
   const [error,       setError       ] = useState("");
   const [activeTab,   setActiveTab   ] = useState("financials");
   const [history,     setHistory     ] = useState<string[]>([]);
-  const [uploadFile,  setUploadFile  ] = useState<File | null>(null);
   const [waccOpen,    setWaccOpen    ] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Load history from localStorage
@@ -413,15 +411,6 @@ export default function Home() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-      // If a file was uploaded, send it first
-      if (uploadFile) {
-        const form = new FormData();
-        form.append("file", uploadFile);
-        form.append("ticker", t);
-        form.append("year", new Date().getFullYear().toString());
-        await fetch(`${apiUrl}/api/upload`, { method: "POST", body: form });
-      }
 
       const res = await fetch(`${apiUrl}/api/analyze`, {
         method: "POST",
@@ -513,47 +502,7 @@ export default function Home() {
 
 
 
-        {/* File Upload */}
-        <div>
-          <p className="section-label">Upload Risk Document</p>
-          <div
-            onClick={() => fileRef.current?.click()}
-            style={{
-              border: `1px dashed rgba(118,171,174,0.35)`,
-              borderRadius: "var(--radius-sm)",
-              padding: "0.8rem",
-              cursor: "pointer",
-              textAlign: "center",
-              transition: "border-color 0.2s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(118,171,174,0.35)")}
-          >
-            <IconUpload size={18} style={{ color: "var(--accent)", margin: "0 auto 0.4rem" } as React.CSSProperties} />
-            <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)" }}>
-              {uploadFile ? uploadFile.name : "Drop .txt extract (overrides auto-fetch)"}
-            </p>
-          </div>
-          <input
-            ref={fileRef} type="file" accept=".txt"
-            style={{ display: "none" }}
-            onChange={e => setUploadFile(e.target.files?.[0] ?? null)}
-          />
-          {uploadFile && (
-            <button
-              onClick={() => setUploadFile(null)}
-              style={{
-                marginTop: "0.35rem", display: "flex", alignItems: "center", gap: "0.3rem",
-                background: "none", border: "none", cursor: "pointer",
-                color: "var(--fg-muted)", fontSize: "0.75rem", fontFamily: "Inter, sans-serif",
-              }}
-            >
-              <IconClose size={12} /> Clear file
-            </button>
-          )}
-        </div>
 
-        <hr className="divider" style={{ margin: "0" }} />
 
         {/* Run Button */}
         <button className="btn-cta" onClick={() => runAnalysis()} disabled={loading}>

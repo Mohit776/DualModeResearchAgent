@@ -6,7 +6,7 @@ import io
 if sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
 
-from fastapi import FastAPI, HTTPException, UploadFile, Form
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Any
@@ -22,6 +22,7 @@ from core.workflow import build_graph
 from core.sec_fetch import fetch_latest_10k_risks, fetch_indian_stock_risks
 from core.config import GROQ_API_KEY
 from core.llm import _chat
+from core.chatbot.chatbot import chat, ChatRequest
 
 app = FastAPI(title="Quant Agent API")
 
@@ -120,60 +121,9 @@ async def analyze_stock(req: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/upload")
-async def upload_document(
-    file: UploadFile,
-    ticker: str = Form(...),
-    year: int = Form(2023)
-):
-    try:
-        content = await file.read()
-        text = content.decode("utf-8")
-        ticker = ticker.upper().strip()
-        
-        client = get_client()
-        if not client.collection_exists(COLLECTION_NAME):
-            create_collection()
-            
-        ingest_document(text, ticker, year)
-        
-        return {"success": True, "message": f"Successfully ingested document for {ticker} ({year})"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-        
-class ChatRequest(BaseModel):
-    message: str
-    ticker: Optional[str] = None
-    report_context: Optional[Any] = None
-
 @app.post("/api/chat")
-async def chat(req: ChatRequest):
-    if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY is not configured")
-
-    system_prompt = (
-        "You are QuantBot, an expert AI stock market and equity research assistant. "
-        "Answer the user's questions clearly, concisely, and accurately. "
-        "Use bullet points for readability where appropriate."
-    )
-
-    if req.ticker and req.report_context:
-        report_str = json.dumps(req.report_context)
-        system_prompt += (
-            f"\n\nContext: The user is currently viewing a financial report for {req.ticker}. "
-            f"Here is the report data: {report_str}\n"
-            "If the user asks about the current stock or report, use this data to answer."
-        )
-
-    try:
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": req.message}
-        ]
-        reply = _chat(messages, temperature=0.3, json_mode=False)
-        return {"success": True, "reply": reply}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def chat_endpoint(req: ChatRequest):
+    return chat(req)
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

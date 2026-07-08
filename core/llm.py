@@ -13,10 +13,11 @@ _groq_client = Groq(api_key=GROQ_API_KEY)
 _groq_fallback_client = Groq(api_key=GROQ_FALLBACK_API_KEY) if GROQ_FALLBACK_API_KEY else None
 
 
-def _chat(messages: list, temperature: float = 0.2, json_mode: bool = True):
+def _chat(messages: list, temperature: float = 0.2, json_mode: bool = True, model: str = None):
     """Unified chat helper that routes to the correct LLM."""
+    model_to_use = model or DEEP_MODEL
     kwargs = dict(
-        model=DEEP_MODEL,
+        model=model_to_use,
         messages=messages,
         temperature=temperature,
     )
@@ -25,7 +26,7 @@ def _chat(messages: list, temperature: float = 0.2, json_mode: bool = True):
 
     with logfire.span(
         "🧠 llm.groq.chat",
-        model=DEEP_MODEL,
+        model=model_to_use,
         n_messages=len(messages),
         temperature=temperature,
     ) as span:
