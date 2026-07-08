@@ -83,14 +83,6 @@ const STEPS_DEEP = [
   "Assembling final investment memo",
 ];
 
-const TABS = [
-  { id: "financials", label: "Financials",  Icon: IconChart   },
-  { id: "risks",      label: "Risks",       Icon: IconShield  },
-  { id: "peers",      label: "Peers",       Icon: IconUsers   },
-  { id: "valuation",  label: "Valuation",   Icon: IconCalc    },
-  { id: "thesis",     label: "Thesis",      Icon: IconBulb    },
-  { id: "review",     label: "Review",      Icon: IconSearch  },
-];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -109,29 +101,29 @@ function sensColor(v: number, min: number, max: number): string {
   // danger (#e05c5c) → warn (#e8a838) → success (#4caf7d)
   if (t < 0.5) {
     const r = Math.round(224 + (232 - 224) * (t * 2));
-    const g = Math.round(92  + (168 - 92)  * (t * 2));
-    const b = Math.round(92  + (56  - 92)  * (t * 2));
+    const g = Math.round(92 + (168 - 92) * (t * 2));
+    const b = Math.round(92 + (56 - 92) * (t * 2));
     return `rgb(${r},${g},${b})`;
   } else {
-    const r = Math.round(232 + (76  - 232) * ((t - 0.5) * 2));
+    const r = Math.round(232 + (76 - 232) * ((t - 0.5) * 2));
     const g = Math.round(168 + (175 - 168) * ((t - 0.5) * 2));
-    const b = Math.round(56  + (125 - 56)  * ((t - 0.5) * 2));
+    const b = Math.round(56 + (125 - 56) * ((t - 0.5) * 2));
     return `rgb(${r},${g},${b})`;
   }
 }
 
 function confidenceColor(level: string) {
-  if (level === "HIGH")   return "var(--success)";
+  if (level === "HIGH") return "var(--success)";
   if (level === "MEDIUM") return "var(--warn)";
   return "var(--danger)";
 }
 
 function actionLabel(action: string): { text: string; color: string; bg: string } {
   const map: Record<string, { text: string; color: string; bg: string }> = {
-    BUY:              { text: "BUY",              color: "var(--success)", bg: "rgba(76,175,125,0.15)" },
-    SELL:             { text: "SELL",             color: "var(--danger)",  bg: "rgba(224,92,92,0.15)"  },
-    HOLD:             { text: "HOLD",             color: "var(--warn)",    bg: "rgba(232,168,56,0.15)" },
-    FURTHER_RESEARCH: { text: "FURTHER RESEARCH", color: "var(--accent)",  bg: "rgba(118,171,174,0.12)"},
+    BUY: { text: "BUY", color: "var(--success)", bg: "rgba(76,175,125,0.15)" },
+    SELL: { text: "SELL", color: "var(--danger)", bg: "rgba(224,92,92,0.15)" },
+    HOLD: { text: "HOLD", color: "var(--warn)", bg: "rgba(232,168,56,0.15)" },
+    FURTHER_RESEARCH: { text: "FURTHER RESEARCH", color: "var(--accent)", bg: "rgba(118,171,174,0.12)" },
   };
   return map[action] ?? map["HOLD"];
 }
@@ -184,11 +176,11 @@ function RevenueBarChart({ prev, latest, prevLabel, latestLabel }: {
 }) {
   const max = Math.max(prev, latest, 1);
   const bars = [
-    { label: prevLabel,   value: prev,   pct: (prev   / max) * 100, color: "var(--accent)" },
-    { label: latestLabel, value: latest, pct: (latest / max) * 100, color: "var(--cta)"    },
+    { label: prevLabel, value: prev, pct: (prev / max) * 100, color: "var(--accent)" },
+    { label: latestLabel, value: latest, pct: (latest / max) * 100, color: "var(--cta)" },
   ];
   return (
-    <div style={{ background: "var(--bg-sunken)", borderRadius: "var(--radius-md)", padding: "1.2rem", marginTop: "1rem" }}>
+    <div style={{ background: "var(--bg-sunken)", borderRadius: "var(--radius-md)", padding: "1.2rem",marginRight: "1.2rem", marginTop: "1rem"  }}>
       <p className="section-label" style={{ marginBottom: "1rem" }}>Revenue Trend</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
         {bars.map(b => (
@@ -297,13 +289,13 @@ function WaccBreakdown({ breakdown, waccPct }: {
   breakdown?: { cost_of_equity?: number; cost_of_debt?: number; equity_weight?: number; debt_weight?: number };
   waccPct?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   if (!breakdown) return null;
   const items = [
-    { label: "Cost of Equity",  value: `${((breakdown.cost_of_equity  ?? 0) * 100).toFixed(1)}%` },
-    { label: "Cost of Debt",    value: `${((breakdown.cost_of_debt    ?? 0) * 100).toFixed(1)}%` },
-    { label: "Equity Weight",   value: `${((breakdown.equity_weight   ?? 0) * 100).toFixed(0)}%` },
-    { label: "Debt Weight",     value: `${((breakdown.debt_weight     ?? 0) * 100).toFixed(0)}%` },
+    { label: "Cost of Equity", value: `${((breakdown.cost_of_equity ?? 0) * 100).toFixed(1)}%` },
+    { label: "Cost of Debt", value: `${((breakdown.cost_of_debt ?? 0) * 100).toFixed(1)}%` },
+    { label: "Equity Weight", value: `${((breakdown.equity_weight ?? 0) * 100).toFixed(0)}%` },
+    { label: "Debt Weight", value: `${((breakdown.debt_weight ?? 0) * 100).toFixed(0)}%` },
   ];
   return (
     <div style={{ marginTop: "1rem" }}>
@@ -345,14 +337,16 @@ function StepProgress({ steps, currentStep }: { steps: string[]; currentStep: nu
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       {steps.map((s, i) => {
-        const done   = i < currentStep;
+        const done = i < currentStep;
         const active = i === currentStep;
         return (
           <div key={i} className={`step-row ${done ? "done" : active ? "active" : ""}`}>
-            {done   ? <IconCheck   size={15} /> :
-             active ? <IconSpinner size={15} /> :
-             <span style={{ width: 15, height: 15, borderRadius: "50%",
-               border: "1.5px solid var(--fg-muted)", display: "inline-block", flexShrink: 0 }} />}
+            {done ? <IconCheck size={15} /> :
+              active ? <IconSpinner size={15} /> :
+                <span style={{
+                  width: 15, height: 15, borderRadius: "50%",
+                  border: "1.5px solid var(--fg-muted)", display: "inline-block", flexShrink: 0
+                }} />}
             <span>{s}</span>
           </div>
         );
@@ -364,14 +358,13 @@ function StepProgress({ steps, currentStep }: { steps: string[]; currentStep: nu
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [ticker,      setTicker      ] = useState("NVDA");
-  const [loading,     setLoading     ] = useState(false);
-  const [currentStep, setCurrentStep ] = useState(0);
-  const [reportData,  setReportData  ] = useState<ApiResponse | null>(null);
-  const [error,       setError       ] = useState("");
-  const [activeTab,   setActiveTab   ] = useState("financials");
-  const [history,     setHistory     ] = useState<string[]>([]);
-  const [waccOpen,    setWaccOpen    ] = useState(false);
+  const [ticker, setTicker] = useState("NVDA");
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [reportData, setReportData] = useState<ApiResponse | null>(null);
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
+  const [waccOpen, setWaccOpen] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Load history from localStorage
@@ -407,7 +400,6 @@ export default function Home() {
     setError("");
     setReportData(null);
     setCurrentStep(0);
-    setActiveTab("financials");
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -438,19 +430,19 @@ export default function Home() {
     a.click(); URL.revokeObjectURL(url);
   };
 
-  const fin   = reportData?.financials ?? {};
+  const fin = reportData?.financials ?? {};
   const report = reportData?.report ?? {};
-  const yoy    = (fin.yoy_growth ?? 0) * 100;
-  const opm    = (fin.op_margin_latest ?? 0) * 100;
-  const opmPrev= (fin.op_margin_prev  ?? 0) * 100;
+  const yoy = (fin.yoy_growth ?? 0) * 100;
+  const opm = (fin.op_margin_latest ?? 0) * 100;
+  const opmPrev = (fin.op_margin_prev ?? 0) * 100;
   const opmDelta = opm - opmPrev;
-  const lyLabel  = String(fin.latest_period ?? "Latest").slice(0, 4);
-  const pyLabel  = String(fin.prev_period   ?? "Prev"  ).slice(0, 4);
-  const steps    = STEPS_DEEP;
-  const conf     = report.investment_conclusion;
-  const confLevel= conf?.overall_confidence ?? "MEDIUM";
-  const confScore= conf?.confidence_score ?? 0.5;
-  const action   = actionLabel(conf?.recommended_action ?? "HOLD");
+  const lyLabel = String(fin.latest_period ?? "Latest").slice(0, 4);
+  const pyLabel = String(fin.prev_period ?? "Prev").slice(0, 4);
+  const steps = STEPS_DEEP;
+  const conf = report.investment_conclusion;
+  const confLevel = conf?.overall_confidence ?? "MEDIUM";
+  const confScore = conf?.confidence_score ?? 0.5;
+  const action = actionLabel(conf?.recommended_action ?? "HOLD");
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -526,9 +518,16 @@ export default function Home() {
         )}
 
         <div style={{ flex: 1 }} />
-        <p style={{ fontSize: "0.68rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>
-          Powered by Groq · Qdrant · LangGraph
-        </p>
+        <div style={{
+          marginTop: "1.5rem",
+          paddingTop: "1.5rem",
+          borderTop: "1px solid rgba(118,171,174,0.15)",
+          textAlign: "center",
+        }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>
+            Developed by <span style={{ color: "var(--accent)", fontWeight: 600, letterSpacing: "0.02em" }}>Mohit Aggarwal</span>
+          </p>
+        </div>
       </aside>
 
       {/* ── Main Content ── */}
@@ -639,12 +638,12 @@ export default function Home() {
             {/* Feature grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
               {[
-                { Icon: IconChart,  title: "AI-Powered",      desc: "Groq for fast execution and high reasoning." },
-                { Icon: IconSearch, title: "Hybrid RAG",         desc: "Dense + sparse vectors in Qdrant with metadata grounding. Zero cross-contamination." },
-                { Icon: IconCalc,   title: "DCF Valuation",      desc: "Deterministic DCF, WACC, and sensitivity analysis. No LLM math guessing." },
-                { Icon: IconShield, title: "Reflection Loop",    desc: "Senior Analyst AI reviews for contradictions and hallucinations before finalizing." },
-                { Icon: IconBulb,   title: "Investment Thesis",  desc: "Bull and bear cases with confidence-weighted conclusions and traceable citations." },
-                { Icon: IconUsers,  title: "Peer Comparison",    desc: "Auto-discovers industry peers and compares operating margins side by side." },
+                { Icon: IconChart, title: "AI-Powered", desc: "Groq for fast execution and high reasoning." },
+                { Icon: IconSearch, title: "Hybrid RAG", desc: "Dense + sparse vectors in Qdrant with metadata grounding. Zero cross-contamination." },
+                { Icon: IconCalc, title: "DCF Valuation", desc: "Deterministic DCF, WACC, and sensitivity analysis. No LLM math guessing." },
+                { Icon: IconShield, title: "Reflection Loop", desc: "Senior Analyst AI reviews for contradictions and hallucinations before finalizing." },
+                { Icon: IconBulb, title: "Investment Thesis", desc: "Bull and bear cases with confidence-weighted conclusions and traceable citations." },
+                { Icon: IconUsers, title: "Peer Comparison", desc: "Auto-discovers industry peers and compares operating margins side by side." },
               ].map(({ Icon, title, desc }) => (
                 <div key={title} className="metric-card" style={{ textAlign: "center", padding: "1.5rem" }}>
                   <Icon size={28} style={{ margin: "0 auto 0.75rem", color: "var(--accent)" } as React.CSSProperties} />
@@ -702,348 +701,325 @@ export default function Home() {
             )}
 
             {/* Tabs */}
-            <div className="tab-bar" style={{ marginBottom: "1.5rem" }}>
-              {TABS.map(({ id, label, Icon }) => (
-                <button
-                  key={id}
-                  className={`tab-item ${activeTab === id ? "active" : ""}`}
-                  onClick={() => setActiveTab(id)}
-                >
-                  <Icon size={14} /> {label}
-                </button>
-              ))}
-            </div>
 
             {/* ── Financials Tab ── */}
-            {activeTab === "financials" && (
-              <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <SectionHeader>Financial KPIs</SectionHeader>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.85rem", marginBottom: "1.5rem" }}>
-                  <MetricCard
-                    label={`Revenue (${lyLabel})`}
-                    value={fmtB(fin.revenue_latest ?? 0)}
-                    delta={`${Math.abs(yoy).toFixed(1)}% YoY`}
-                    deltaLabel={`${pyLabel} → ${lyLabel}`}
-                    positive={yoy >= 0}
-                  />
-                  <MetricCard
-                    label={`Revenue (${pyLabel})`}
-                    value={fmtB(fin.revenue_prev ?? 0)}
-                    delta="Prior year"
-                    positive={true}
-                  />
-                  <MetricCard
-                    label={`Operating Income (${lyLabel})`}
-                    value={fmtB(fin.op_income_latest ?? 0)}
-                  />
-                  <MetricCard
-                    label={`Operating Margin (${lyLabel})`}
-                    value={`${opm.toFixed(1)}%`}
-                    delta={`${Math.abs(opmDelta).toFixed(1)}pp vs ${pyLabel}`}
-                    positive={opmDelta >= 0}
-                  />
-                </div>
-
-                {/* Revenue bar chart */}
-                <RevenueBarChart
-                  prev={fin.revenue_prev ?? 0}
-                  latest={fin.revenue_latest ?? 0}
-                  prevLabel={pyLabel}
-                  latestLabel={lyLabel}
+            <div style={{ animation: "fadeIn 0.3s ease", marginBottom: "3rem" }}>
+              <SectionHeader>Financial KPIs</SectionHeader>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.85rem", marginBottom: "1.5rem" }}>
+                <MetricCard
+                  label={`Revenue (${lyLabel})`}
+                  value={fmtB(fin.revenue_latest ?? 0)}
+                  delta={`${Math.abs(yoy).toFixed(1)}% YoY`}
+                  deltaLabel={`${pyLabel} → ${lyLabel}`}
+                  positive={yoy >= 0}
                 />
-
-                {/* AI analysis */}
-                {report.financial_overview && (
-                  <div style={{ marginTop: "1.5rem" }}>
-                    <SectionHeader>AI Financial Analysis</SectionHeader>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                      {[
-                        { label: "Revenue Growth",          key: "revenue_growth"          },
-                        { label: "Operating Margin Trend",  key: "operating_margin_trend"  },
-                      ].map(({ label, key }) => (
-                        <div key={key} style={{
-                          background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
-                          padding: "1.1rem 1.3rem",
-                          border: "1px solid rgba(118,171,174,0.15)",
-                        }}>
-                          <p className="section-label" style={{ marginBottom: "0.5rem" }}>{label}</p>
-                          <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
-                            {(report.financial_overview as any)[key] ?? "—"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <MetricCard
+                  label={`Revenue (${pyLabel})`}
+                  value={fmtB(fin.revenue_prev ?? 0)}
+                  delta="Prior year"
+                  positive={true}
+                />
+                <MetricCard
+                  label={`Operating Income (${lyLabel})`}
+                  value={fmtB(fin.op_income_latest ?? 0)}
+                />
+                <MetricCard
+                  label={`Operating Margin (${lyLabel})`}
+                  value={`${opm.toFixed(1)}%`}
+                  delta={`${Math.abs(opmDelta).toFixed(1)}pp vs ${pyLabel}`}
+                  positive={opmDelta >= 0}
+                />
               </div>
-            )}
+
+              {/* Revenue bar chart */}
+              <RevenueBarChart
+                prev={fin.revenue_prev ?? 0}
+                latest={fin.revenue_latest ?? 0}
+                prevLabel={pyLabel}
+                latestLabel={lyLabel}
+              />
+
+              {/* AI analysis */}
+              {report.financial_overview && (
+                <div style={{ marginTop: "1.5rem" }}>
+                  <SectionHeader>AI Financial Analysis</SectionHeader>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    {[
+                      { label: "Revenue Growth", key: "revenue_growth" },
+                      { label: "Operating Margin Trend", key: "operating_margin_trend" },
+                    ].map(({ label, key }) => (
+                      <div key={key} style={{
+                        background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
+                        padding: "1.1rem 1.3rem",
+                        border: "1px solid rgba(118,171,174,0.15)",
+                      }}>
+                        <p className="section-label" style={{ marginBottom: "0.5rem" }}>{label}</p>
+                        <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
+                          {(report.financial_overview as any)[key] ?? "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* ── Risks Tab ── */}
-            {activeTab === "risks" && (
-              <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <SectionHeader>Risk Assessment</SectionHeader>
-                {report.risk_assessment ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
-                    {[
-                      { label: "Industry Risks",    items: report.risk_assessment.industry_risks    },
-                      { label: "Operational Risks", items: report.risk_assessment.operational_risks },
-                      { label: "Regulatory Risks",  items: report.risk_assessment.regulatory_risks  },
-                    ].map(({ label, items }) => (
-                      <div key={label} style={{
-                        background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
-                        padding: "1.2rem", border: "1px solid rgba(118,171,174,0.12)",
-                      }}>
-                        <p className="section-label" style={{ marginBottom: "0.75rem" }}>{label}</p>
-                        {items?.length ? (
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                            {items.map((r, i) => (
-                              <span key={i} className="risk-pill">{r}</span>
-                            ))}
-                          </div>
-                        ) : <EmptyState label="No data available." />}
-                      </div>
-                    ))}
-                  </div>
-                ) : <EmptyState label="No risk data in this report." />}
-              </div>
-            )}
+            <div style={{ animation: "fadeIn 0.3s ease", marginBottom: "3rem" }}>
+              <SectionHeader>Risk Assessment</SectionHeader>
+              {report.risk_assessment ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
+                  {[
+                    { label: "Industry Risks", items: report.risk_assessment.industry_risks },
+                    { label: "Operational Risks", items: report.risk_assessment.operational_risks },
+                    { label: "Regulatory Risks", items: report.risk_assessment.regulatory_risks },
+                  ].map(({ label, items }) => (
+                    <div key={label} style={{
+                      background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
+                      padding: "1.2rem", border: "1px solid rgba(118,171,174,0.12)",
+                    }}>
+                      <p className="section-label" style={{ marginBottom: "0.75rem" }}>{label}</p>
+                      {items?.length ? (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                          {items.map((r, i) => (
+                            <span key={i} className="risk-pill">{r}</span>
+                          ))}
+                        </div>
+                      ) : <EmptyState label="No data available." />}
+                    </div>
+                  ))}
+                </div>
+              ) : <EmptyState label="No risk data in this report." />}
+            </div>
 
             {/* ── Peers Tab ── */}
-            {activeTab === "peers" && (
-              <div style={{ animation: "fadeIn 0.3s ease" }}>
-                {report.peer_comparison ? (() => {
-                  const pc = report.peer_comparison!;
-                  const diff = ((pc.company_operating_margin ?? 0) - (pc.avg_peer_operating_margin ?? 0)) * 100;
-                  return (
-                    <>
-                      <SectionHeader>
-                        Peer Comparison — vs {pc.peers?.join(" · ") || "Peers"}
-                      </SectionHeader>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: "0.85rem" }}>
-                        {/* Company card */}
-                        <div style={{
-                          background: "rgba(118,171,174,0.1)",
-                          border: "1px solid rgba(118,171,174,0.35)",
-                          borderRadius: "var(--radius-md)", padding: "1.1rem",
-                          textAlign: "center",
-                        }}>
-                          <p className="section-label">{reportData.ticker} Op. Margin</p>
-                          <p style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--fg)", marginTop: "0.3rem" }}>
-                            {((pc.company_operating_margin ?? 0) * 100).toFixed(1)}%
-                          </p>
-                        </div>
-                        {/* vs Peer Avg */}
-                        <div style={{
-                          background: diff >= 0 ? "rgba(76,175,125,0.1)" : "rgba(224,92,92,0.1)",
-                          border: `1px solid ${diff >= 0 ? "rgba(76,175,125,0.35)" : "rgba(224,92,92,0.35)"}`,
-                          borderRadius: "var(--radius-md)", padding: "1.1rem",
-                          textAlign: "center",
-                        }}>
-                          <p className="section-label">vs Peer Avg</p>
-                          <p style={{
-                            fontSize: "1.6rem", fontWeight: 800,
-                            color: diff >= 0 ? "var(--success)" : "var(--danger)",
-                            marginTop: "0.3rem",
-                          }}>
-                            {diff >= 0 ? "+" : ""}{diff.toFixed(1)}pp
-                          </p>
-                        </div>
-                        {/* Each peer */}
-                        {pc.peers?.map(p => (
-                          <div key={p} style={{
-                            background: "var(--bg-raised)",
-                            border: "1px solid rgba(118,171,174,0.18)",
-                            borderRadius: "var(--radius-md)", padding: "1.1rem",
-                            textAlign: "center",
-                          }}>
-                            <p className="section-label">{p} Op. Margin</p>
-                            <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--fg)", marginTop: "0.3rem" }}>
-                              {((pc.peer_margins?.[p] ?? 0) * 100).toFixed(1)}%
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  );
-                })() : (
-                  <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
-                    <IconUsers size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
-                    <p>Peer comparison data is not available.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Valuation Tab ── */}
-            {activeTab === "valuation" && (
-              <div style={{ animation: "fadeIn 0.3s ease" }}>
-                {report.dcf_valuation && !report.dcf_valuation.error ? (
+            <div style={{ animation: "fadeIn 0.3s ease", marginBottom: "3rem" }}>
+              {report.peer_comparison ? (() => {
+                const pc = report.peer_comparison!;
+                const diff = ((pc.company_operating_margin ?? 0) - (pc.avg_peer_operating_margin ?? 0)) * 100;
+                return (
                   <>
-                    <SectionHeader>DCF Valuation</SectionHeader>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.85rem", marginBottom: "1.5rem" }}>
-                      {[
-                        { label: "Enterprise Value",    value: fmtB(report.dcf_valuation.enterprise_value ?? 0) },
-                        { label: "Equity Value",        value: fmtB(report.dcf_valuation.equity_value ?? 0)     },
-                        { label: "Implied Share Price", value: `$${(report.dcf_valuation.implied_share_price ?? 0).toFixed(2)}` },
-                        { label: "WACC",                value: report.wacc_analysis?.wacc_pct ?? "N/A"          },
-                      ].map(({ label, value }) => (
-                        <div key={label} style={{
-                          background: "rgba(118,171,174,0.07)",
-                          border: "1px solid rgba(118,171,174,0.2)",
-                          borderRadius: "var(--radius-md)", padding: "1.2rem 1.4rem",
+                    <SectionHeader>
+                      Peer Comparison — vs {pc.peers?.join(" · ") || "Peers"}
+                    </SectionHeader>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: "0.85rem" }}>
+                      {/* Company card */}
+                      <div style={{
+                        background: "rgba(118,171,174,0.1)",
+                        border: "1px solid rgba(118,171,174,0.35)",
+                        borderRadius: "var(--radius-md)", padding: "1.1rem",
+                        textAlign: "center",
+                      }}>
+                        <p className="section-label">{reportData.ticker} Op. Margin</p>
+                        <p style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--fg)", marginTop: "0.3rem" }}>
+                          {((pc.company_operating_margin ?? 0) * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                      {/* vs Peer Avg */}
+                      <div style={{
+                        background: diff >= 0 ? "rgba(76,175,125,0.1)" : "rgba(224,92,92,0.1)",
+                        border: `1px solid ${diff >= 0 ? "rgba(76,175,125,0.35)" : "rgba(224,92,92,0.35)"}`,
+                        borderRadius: "var(--radius-md)", padding: "1.1rem",
+                        textAlign: "center",
+                      }}>
+                        <p className="section-label">vs Peer Avg</p>
+                        <p style={{
+                          fontSize: "1.6rem", fontWeight: 800,
+                          color: diff >= 0 ? "var(--success)" : "var(--danger)",
+                          marginTop: "0.3rem",
                         }}>
-                          <p className="section-label" style={{ marginBottom: "0.35rem" }}>{label}</p>
-                          <p style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--fg)" }}>{value}</p>
+                          {diff >= 0 ? "+" : ""}{diff.toFixed(1)}pp
+                        </p>
+                      </div>
+                      {/* Each peer */}
+                      {pc.peers?.map(p => (
+                        <div key={p} style={{
+                          background: "var(--bg-raised)",
+                          border: "1px solid rgba(118,171,174,0.18)",
+                          borderRadius: "var(--radius-md)", padding: "1.1rem",
+                          textAlign: "center",
+                        }}>
+                          <p className="section-label">{p} Op. Margin</p>
+                          <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--fg)", marginTop: "0.3rem" }}>
+                            {((pc.peer_margins?.[p] ?? 0) * 100).toFixed(1)}%
+                          </p>
                         </div>
                       ))}
                     </div>
-
-                    {/* WACC Breakdown */}
-                    <WaccBreakdown
-                      breakdown={report.wacc_analysis?.breakdown}
-                      waccPct={report.wacc_analysis?.wacc_pct}
-                    />
-
-                    {/* Sensitivity */}
-                    {report.sensitivity_analysis?.implied_prices && (
-                      <div style={{ marginTop: "1.75rem" }}>
-                        <SectionHeader>Sensitivity Analysis</SectionHeader>
-                        <p style={{ fontSize: "0.8rem", color: "var(--fg-muted)", marginBottom: "0.75rem" }}>
-                          Implied share price across WACC (rows) vs Terminal Growth Rate (columns)
-                        </p>
-                        <div style={{
-                          background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
-                          padding: "1.25rem", border: "1px solid rgba(118,171,174,0.12)",
-                        }}>
-                          <SensitivityGrid
-                            data={report.sensitivity_analysis.implied_prices}
-                            baseCase={report.sensitivity_analysis.base_case}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </>
-                ) : (
-                  <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
-                    <IconCalc size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
-                    <p>Valuation data is not available.</p>
-                    {report.dcf_valuation?.error && (
-                      <p style={{ color: "var(--danger)", marginTop: "0.5rem", fontSize: "0.85rem" }}>
-                        Error: {report.dcf_valuation.error}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                );
+              })() : (
+                <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
+                  <IconUsers size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
+                  <p>Peer comparison data is not available.</p>
+                </div>
+              )}
+            </div>
 
-            {/* ── Thesis Tab ── */}
-            {activeTab === "thesis" && (
-              <div style={{ animation: "fadeIn 0.3s ease" }}>
-                {report.thesis ? (
-                  <>
-                    <SectionHeader>Investment Thesis</SectionHeader>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                      <div style={{
-                        background: "rgba(76,175,125,0.08)",
-                        border: "1px solid rgba(76,175,125,0.25)",
-                        borderRadius: "var(--radius-md)", padding: "1.4rem",
+            {/* ── Valuation Tab ── */}
+            <div style={{ animation: "fadeIn 0.3s ease", marginBottom: "3rem" }}>
+              {report.dcf_valuation && !report.dcf_valuation.error ? (
+                <>
+                  <SectionHeader>DCF Valuation</SectionHeader>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.85rem", marginBottom: "1.5rem" }}>
+                    {[
+                      { label: "Enterprise Value", value: fmtB(report.dcf_valuation.enterprise_value ?? 0) },
+                      { label: "Equity Value", value: fmtB(report.dcf_valuation.equity_value ?? 0) },
+                      { label: "Implied Share Price", value: `$${(report.dcf_valuation.implied_share_price ?? 0).toFixed(2)}` },
+                      { label: "WACC", value: report.wacc_analysis?.wacc_pct ?? "N/A" },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{
+                        background: "rgba(118,171,174,0.07)",
+                        border: "1px solid rgba(118,171,174,0.2)",
+                        borderRadius: "var(--radius-md)", padding: "1.2rem 1.4rem",
                       }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                          <IconTrendingUp size={18} style={{ color: "var(--success)" } as React.CSSProperties} />
-                          <span style={{ fontWeight: 700, color: "var(--success)" }}>Bull Case</span>
-                        </div>
-                        <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.75 }}>
-                          {report.thesis.bull_case ?? "—"}
-                        </p>
-                      </div>
-                      <div style={{
-                        background: "rgba(224,92,92,0.08)",
-                        border: "1px solid rgba(224,92,92,0.25)",
-                        borderRadius: "var(--radius-md)", padding: "1.4rem",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                          <IconTrendingDown size={18} style={{ color: "var(--danger)" } as React.CSSProperties} />
-                          <span style={{ fontWeight: 700, color: "var(--danger)" }}>Bear Case</span>
-                        </div>
-                        <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.75 }}>
-                          {report.thesis.bear_case ?? "—"}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
-                    <IconBulb size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
-                    <p>Investment thesis is not available.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Review Tab ── */}
-            {activeTab === "review" && (
-              <div style={{ animation: "fadeIn 0.3s ease" }}>
-                {/* Senior Analyst Review */}
-                {report.senior_analyst_review ? (() => {
-                  const rev = report.senior_analyst_review!;
-                  const approved = rev.approved !== false;
-                  return (
-                    <>
-                      <SectionHeader>Senior Analyst Review</SectionHeader>
-                      <div style={{
-                        background: approved ? "rgba(76,175,125,0.08)" : "rgba(232,168,56,0.08)",
-                        border: `1px solid ${approved ? "rgba(76,175,125,0.3)" : "rgba(232,168,56,0.3)"}`,
-                        borderRadius: "var(--radius-md)", padding: "1.4rem",
-                        marginBottom: "1.5rem",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.75rem" }}>
-                          {approved
-                            ? <IconCheck   size={20} style={{ color: "var(--success)" } as React.CSSProperties} />
-                            : <IconWarning size={20} style={{ color: "var(--warn)"    } as React.CSSProperties} />}
-                          <span style={{ fontWeight: 700, fontSize: "1rem", color: approved ? "var(--success)" : "var(--warn)" }}>
-                            {approved ? "Approved" : "Flagged for Review"}
-                          </span>
-                          <span style={{
-                            marginLeft: "auto",
-                            background: "rgba(255,87,34,0.15)", color: "var(--cta)",
-                            border: "1px solid rgba(255,87,34,0.3)",
-                            padding: "0.15rem 0.6rem", borderRadius: "99px",
-                            fontSize: "0.75rem", fontWeight: 700,
-                          }}>
-                            {rev.revision_cycles ?? 0} revision{(rev.revision_cycles ?? 0) !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
-                          {rev.feedback ?? "No feedback provided."}
-                        </p>
-                      </div>
-                    </>
-                  );
-                })() : (
-                  <div style={{ textAlign: "center", padding: "2rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
-                    <p>Senior Analyst Review is not available.</p>
-                  </div>
-                )}
-
-                {/* Citations */}
-                {report.citations && report.citations.length > 0 && (
-                  <>
-                    <SectionHeader>
-                      Source Citations ({report.citations.length})
-                    </SectionHeader>
-                    {report.citations.map((c, i) => (
-                      <div key={i} className="citation-item">
-                        <p className="cite-label">
-                          [{i + 1}] {c.source} — Chunk #{c.chunk_index} — Relevance: {c.relevance_score?.toFixed(3)}
-                        </p>
-                        <p style={{ marginTop: "0.2rem" }}>{c.excerpt}</p>
+                        <p className="section-label" style={{ marginBottom: "0.35rem" }}>{label}</p>
+                        <p style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--fg)" }}>{value}</p>
                       </div>
                     ))}
+                  </div>
+
+                  {/* WACC Breakdown */}
+                  <WaccBreakdown
+                    breakdown={report.wacc_analysis?.breakdown}
+                    waccPct={report.wacc_analysis?.wacc_pct}
+                  />
+
+                  {/* Sensitivity */}
+                  {report.sensitivity_analysis?.implied_prices && (
+                    <div style={{ marginTop: "1.75rem" }}>
+                      <SectionHeader>Sensitivity Analysis</SectionHeader>
+                      <p style={{ fontSize: "0.8rem", color: "var(--fg-muted)", marginBottom: "0.75rem" }}>
+                        Implied share price across WACC (rows) vs Terminal Growth Rate (columns)
+                      </p>
+                      <div style={{
+                        background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
+                        padding: "1.25rem", border: "1px solid rgba(118,171,174,0.12)",
+                      }}>
+                        <SensitivityGrid
+                          data={report.sensitivity_analysis.implied_prices}
+                          baseCase={report.sensitivity_analysis.base_case}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
+                  <IconCalc size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
+                  <p>Valuation data is not available.</p>
+                  {report.dcf_valuation?.error && (
+                    <p style={{ color: "var(--danger)", marginTop: "0.5rem", fontSize: "0.85rem" }}>
+                      Error: {report.dcf_valuation.error}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Thesis Tab ── */}
+            <div style={{ animation: "fadeIn 0.3s ease", marginBottom: "3rem" }}>
+              {report.thesis ? (
+                <>
+                  <SectionHeader>Investment Thesis</SectionHeader>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div style={{
+                      background: "rgba(76,175,125,0.08)",
+                      border: "1px solid rgba(76,175,125,0.25)",
+                      borderRadius: "var(--radius-md)", padding: "1.4rem",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                        <IconTrendingUp size={18} style={{ color: "var(--success)" } as React.CSSProperties} />
+                        <span style={{ fontWeight: 700, color: "var(--success)" }}>Bull Case</span>
+                      </div>
+                      <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.75 }}>
+                        {report.thesis.bull_case ?? "—"}
+                      </p>
+                    </div>
+                    <div style={{
+                      background: "rgba(224,92,92,0.08)",
+                      border: "1px solid rgba(224,92,92,0.25)",
+                      borderRadius: "var(--radius-md)", padding: "1.4rem",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                        <IconTrendingDown size={18} style={{ color: "var(--danger)" } as React.CSSProperties} />
+                        <span style={{ fontWeight: 700, color: "var(--danger)" }}>Bear Case</span>
+                      </div>
+                      <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.75 }}>
+                        {report.thesis.bear_case ?? "—"}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: "3rem", color: "var(--fg-muted)" }}>
+                  <IconBulb size={40} style={{ margin: "0 auto 1rem", opacity: 0.3 } as React.CSSProperties} />
+                  <p>Investment thesis is not available.</p>
+                </div>
+              )}
+            </div>
+
+            {/* ── Review Tab ── */}
+            <div style={{ animation: "fadeIn 0.3s ease", marginBottom: "3rem" }}>
+              {/* Senior Analyst Review */}
+              {report.senior_analyst_review ? (() => {
+                const rev = report.senior_analyst_review!;
+                const approved = rev.approved !== false;
+                return (
+                  <>
+                    <SectionHeader>Senior Analyst Review</SectionHeader>
+                    <div style={{
+                      background: approved ? "rgba(76,175,125,0.08)" : "rgba(232,168,56,0.08)",
+                      border: `1px solid ${approved ? "rgba(76,175,125,0.3)" : "rgba(232,168,56,0.3)"}`,
+                      borderRadius: "var(--radius-md)", padding: "1.4rem",
+                      marginBottom: "1.5rem",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.75rem" }}>
+                        {approved
+                          ? <IconCheck size={20} style={{ color: "var(--success)" } as React.CSSProperties} />
+                          : <IconWarning size={20} style={{ color: "var(--warn)" } as React.CSSProperties} />}
+                        <span style={{ fontWeight: 700, fontSize: "1rem", color: approved ? "var(--success)" : "var(--warn)" }}>
+                          {approved ? "Approved" : "Flagged for Review"}
+                        </span>
+                        <span style={{
+                          marginLeft: "auto",
+                          background: "rgba(255,87,34,0.15)", color: "var(--cta)",
+                          border: "1px solid rgba(255,87,34,0.3)",
+                          padding: "0.15rem 0.6rem", borderRadius: "99px",
+                          fontSize: "0.75rem", fontWeight: 700,
+                        }}>
+                          {rev.revision_cycles ?? 0} revision{(rev.revision_cycles ?? 0) !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.875rem", color: "var(--fg-muted)", lineHeight: 1.7 }}>
+                        {rev.feedback ?? "No feedback provided."}
+                      </p>
+                    </div>
                   </>
-                )}
-              </div>
-            )}
+                );
+              })() : (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--fg-muted)", marginBottom: "1.5rem" }}>
+                  <p>Senior Analyst Review is not available.</p>
+                </div>
+              )}
+
+              {/* Citations */}
+              {report.citations && report.citations.length > 0 && (
+                <>
+                  <SectionHeader>
+                    Source Citations ({report.citations.length})
+                  </SectionHeader>
+                  {report.citations.map((c, i) => (
+                    <div key={i} className="citation-item">
+                      <p className="cite-label">
+                        [{i + 1}] {c.source} — Chunk #{c.chunk_index} — Relevance: {c.relevance_score?.toFixed(3)}
+                      </p>
+                      <p style={{ marginTop: "0.2rem" }}>{c.excerpt}</p>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
 
           </div>
         )}
