@@ -9,7 +9,7 @@ Designed for AI engineering and financial analysis, it features stateful memory,
 - **Multi-Source Data Ingestion:** Real-time stock data via Yahoo Finance (`yfinance`) and direct risk factor extraction from SEC EDGAR 10-K filings.
 - **Production RAG Pipeline:** Uses **Gemini Embeddings** (via direct REST API for minimal footprint) and **Qdrant Vector Database** (Cloud) for hybrid semantic search.
 - **Agentic Orchestration:** Powered by **LangGraph** to handle stateful, multi-step financial reasoning (Quant Analysis → Peer Comparison → Thesis Generation → Reflection Loop).
-- **High-Performance LLMs:** Utilises open-source models (1.12B parameters) powered by **Groq** for lightning-fast inference.
+- **High-Performance LLMs:** Utilises open-source models (120B parameters) powered by **Groq** for lightning-fast inference.
 - **Self-Reflecting Guardrails:** Includes a "Senior Analyst" reflection node that reviews generated theses for financial contradictions and hallucinations, looping back for corrections if necessary.
 - **Full Observability:** Deep integration with **Pydantic Logfire** for tracing LLM latency, retrieval scores, and LangGraph state changes.
 - **Memory-Augmented Chatbot:** A responsive Next.js frontend with an interactive chatbot that remembers context across sessions.

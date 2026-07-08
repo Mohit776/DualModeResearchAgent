@@ -11,7 +11,8 @@ def get_ranker():
     if _ranker is None:
         # We store the models in ./db/flashrank_cache
         os.makedirs("./db/flashrank_cache", exist_ok=True)
-        _ranker = Ranker(model_name="ms-marco-MiniLM-L-12-v2", cache_dir="./db/flashrank_cache")
+        # Using TinyBERT (15MB) instead of MiniLM-L-12-v2 (100MB+) for Render Free Tier!
+        _ranker = Ranker(model_name="ms-marco-TinyBERT-L-2-v2", cache_dir="./db/flashrank_cache")
     return _ranker
 
 # ── Hybrid retrieval ─────────────────────────────────────────────────────────
@@ -90,7 +91,7 @@ def retrieve_risks(
                 final_hits = []
                 for item in reranked_results[:limit]:
                     meta = item["meta"]
-                    meta["score"] = round(float(item["score"]), 4) # Update score from reranker
+                    meta["score"] = round(float(item["score"]), 4)
                     final_hits.append(meta)
                 hits = final_hits
 

@@ -28,7 +28,7 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-    
+
     const userMsg: Message = { role: "user", content: text };
     setMessages(prev => [...prev, userMsg]);
     setInputValue("");
@@ -46,10 +46,10 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
           history: messages,
         }),
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail ?? "Failed to fetch response");
-      
+
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err: any) {
       setMessages(prev => [...prev, { role: "assistant", content: `Error: ${err.message}` }]);
@@ -74,8 +74,8 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
   return (
     <>
       {/* Floating Action Button */}
-      <button 
-        className="chatbot-bubble" 
+      <button
+        className="chatbot-bubble"
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: "fixed", bottom: "2rem", right: "2rem", zIndex: 50,
@@ -94,7 +94,7 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div 
+        <div
           className="chatbot-panel animate-slideInRight"
           style={{
             position: "fixed", bottom: "7rem", right: "2rem", zIndex: 49,
@@ -121,8 +121,8 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
               </div>
               <span style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--fg)", letterSpacing: "0.5px" }}>QuantBot</span>
               {ticker && (
-                <span style={{ 
-                  background: "var(--accent)", color: "white", padding: "0.2rem 0.6rem", 
+                <span style={{
+                  background: "var(--accent)", color: "white", padding: "0.2rem 0.6rem",
                   borderRadius: "99px", fontSize: "0.7rem", fontWeight: 700,
                   boxShadow: "0 2px 8px rgba(118,171,174,0.4)"
                 }}>
@@ -130,10 +130,10 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
                 </span>
               )}
             </div>
-            <button 
+            <button
               onClick={() => setIsOpen(false)}
-              style={{ 
-                background: "rgba(255,255,255,0.05)", border: "none", color: "var(--fg-muted)", 
+              style={{
+                background: "rgba(255,255,255,0.05)", border: "none", color: "var(--fg-muted)",
                 cursor: "pointer", width: "32px", height: "32px", borderRadius: "50%",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "all 0.2s"
@@ -151,13 +151,13 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
             scrollBehavior: "smooth"
           }}>
             {messages.length === 0 ? (
-              <div style={{ 
-                margin: "auto", textAlign: "center", color: "var(--fg-muted)", 
+              <div style={{
+                margin: "auto", textAlign: "center", color: "var(--fg-muted)",
                 display: "flex", flexDirection: "column", gap: "1rem",
                 animation: "fadeIn 0.5s ease-in"
               }}>
-                <div style={{ 
-                  background: "rgba(118,171,174,0.05)", width: "80px", height: "80px", 
+                <div style={{
+                  background: "rgba(118,171,174,0.05)", width: "80px", height: "80px",
                   borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
                   margin: "0 auto", border: "1px solid rgba(118,171,174,0.1)"
                 }}>
@@ -169,10 +169,10 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
                     Ask me anything about {ticker ? ticker : "investments"}.
                   </p>
                 </div>
-                
+
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem" }}>
                   {suggestedQuestions.map((q, i) => (
-                    <button 
+                    <button
                       key={i}
                       onClick={() => sendMessage(q)}
                       style={{
@@ -210,7 +210,7 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
                 };
 
                 return (
-                  <div key={i} style={{ 
+                  <div key={i} style={{
                     alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
                     maxWidth: "85%",
                     background: msg.role === "user" ? "var(--cta)" : "rgba(118,171,174,0.1)",
@@ -232,9 +232,9 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
               })
             )}
             {isLoading && (
-              <div style={{ 
-                alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "0.5rem", 
-                padding: "1rem 1.25rem", background: "rgba(118,171,174,0.05)", 
+              <div style={{
+                alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "0.5rem",
+                padding: "1rem 1.25rem", background: "rgba(118,171,174,0.05)",
                 borderRadius: "1rem", borderBottomLeftRadius: "0.25rem",
                 border: "1px solid rgba(118,171,174,0.1)"
               }}>
@@ -251,22 +251,22 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
             padding: "1.25rem", background: "rgba(0,0,0,0.2)", borderTop: "1px solid rgba(118,171,174,0.15)"
           }}>
             <div style={{
-              display: "flex", gap: "0.75rem", background: "rgba(255,255,255,0.03)", 
-              border: "1px solid rgba(118,171,174,0.3)", borderRadius: "99px", 
+              display: "flex", gap: "0.75rem", background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(118,171,174,0.3)", borderRadius: "99px",
               padding: "0.5rem", alignItems: "center",
               transition: "border-color 0.2s, background 0.2s"
             }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = "var(--accent)";
-              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = "rgba(118,171,174,0.3)";
-              e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-            }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--accent)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(118,171,174,0.3)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+              }}
             >
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -277,11 +277,11 @@ export default function Chatbot({ ticker, reportContext }: ChatbotProps) {
                   fontSize: "0.95rem", outline: "none", width: "100%"
                 }}
               />
-              <button 
+              <button
                 onClick={() => sendMessage(inputValue)}
                 disabled={isLoading || !inputValue.trim()}
                 style={{
-                  background: inputValue.trim() ? "var(--accent)" : "rgba(118,171,174,0.2)", 
+                  background: inputValue.trim() ? "var(--accent)" : "rgba(118,171,174,0.2)",
                   border: "none", color: "white", width: "42px", height: "42px",
                   borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: inputValue.trim() ? "pointer" : "default",

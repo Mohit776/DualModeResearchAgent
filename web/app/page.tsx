@@ -180,7 +180,7 @@ function RevenueBarChart({ prev, latest, prevLabel, latestLabel }: {
     { label: latestLabel, value: latest, pct: (latest / max) * 100, color: "var(--cta)" },
   ];
   return (
-    <div style={{ background: "var(--bg-sunken)", borderRadius: "var(--radius-md)", padding: "1.2rem",marginRight: "1.2rem", marginTop: "1rem"  }}>
+    <div style={{ background: "var(--bg-sunken)", borderRadius: "var(--radius-md)", padding: "1.2rem", marginRight: "1.2rem", marginTop: "1rem" }}>
       <p className="section-label" style={{ marginBottom: "1rem" }}>Revenue Trend</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
         {bars.map(b => (
@@ -449,7 +449,7 @@ export default function Home() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-sunken)", display: "flex" }}>
 
-      <Sidebar 
+      <Sidebar
         ticker={ticker}
         setTicker={setTicker}
         runAnalysis={runAnalysis}
@@ -557,7 +557,7 @@ export default function Home() {
               <h3 style={{ color: "var(--fg)", fontWeight: 700, marginBottom: "0.5rem" }}>
                 Enter a ticker and click Run Analysis
               </h3>
-         
+
             </div>
             {/* Feature grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
