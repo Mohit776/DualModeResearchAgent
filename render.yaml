@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: quant-agent-api
+    env: docker
+    region: ohio # Change this based on your preferred region
+    plan: free # Using Render's free tier
+    healthCheckPath: /api/health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_FALLBACK_API_KEY
+        sync: false
+      - key: GEMINI_KEY
+        sync: false
+      - key: POLYGON_API_KEY
+        sync: false
+      - key: HF_TOKEN
+        sync: false
+      - key: QDRANT_API
+        sync: false
+      - key: QDRANT_CLUSTER
+        sync: false
+      - key: LOGFIRE_TOKEN
+        sync: false

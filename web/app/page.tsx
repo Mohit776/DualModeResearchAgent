@@ -8,7 +8,7 @@ import {
   IconBarChart, IconChevronDown, IconChevronUp, IconLink,
 } from "./icons";
 import Chatbot from "./Chatbot";
-
+import Sidebar from "./Sidebar";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface FinancialData {
@@ -449,86 +449,14 @@ export default function Home() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-sunken)", display: "flex" }}>
 
-      {/* ── Sidebar ── */}
-      <aside style={{
-        width: 280, flexShrink: 0,
-        background: "var(--bg)",
-        borderRight: "1px solid rgba(118,171,174,0.15)",
-        padding: "1.5rem 1.25rem",
-        display: "flex", flexDirection: "column", gap: "1.2rem",
-        position: "sticky", top: 0, height: "100vh", overflowY: "auto",
-      }}>
-        {/* Logo */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.15rem" }}>
-            <IconBarChart size={20} style={{ color: "var(--cta)" } as React.CSSProperties} />
-            <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--fg)" }}>Quant Agent</span>
-          </div>
-          <p style={{ fontSize: "0.73rem", color: "var(--fg-muted)", marginLeft: "1.75rem" }}>
-            Financial Intelligence Platform
-          </p>
-        </div>
-
-        <hr className="divider" style={{ margin: "0" }} />
-
-        {/* Ticker Input */}
-        <div>
-          <p className="section-label">Ticker Symbol</p>
-          <input
-            className="field-input"
-            type="text"
-            value={ticker}
-            onChange={e => setTicker(e.target.value.toUpperCase())}
-            onKeyDown={e => e.key === "Enter" && runAnalysis()}
-            placeholder="e.g. AAPL, TSLA, RELIANCE.NS"
-          />
-          {/* Popular chips */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.6rem" }}>
-            {POPULAR_TICKERS.map(t => (
-              <button key={t} className="chip" onClick={() => { setTicker(t); }}>
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-
-
-
-
-
-        {/* Run Button */}
-        <button className="btn-cta" onClick={() => runAnalysis()} disabled={loading}>
-          {loading ? <IconSpinner size={16} /> : <IconRocket size={16} />}
-          {loading ? "Running Analysis..." : "Run Analysis"}
-        </button>
-
-        {/* History */}
-        {history.length > 0 && (
-          <div>
-            <p className="section-label" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-              <IconHistory size={12} /> Recent
-            </p>
-            {history.map(h => (
-              <div key={h} className="history-item" onClick={() => { setTicker(h); runAnalysis(h); }}>
-                <IconLink size={12} style={{ color: "var(--accent)", flexShrink: 0 } as React.CSSProperties} />
-                {h}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={{ flex: 1 }} />
-        <div style={{
-          marginTop: "1.5rem",
-          paddingTop: "1.5rem",
-          borderTop: "1px solid rgba(118,171,174,0.15)",
-          textAlign: "center",
-        }}>
-          <p style={{ fontSize: "0.85rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>
-            Developed by <span style={{ color: "var(--accent)", fontWeight: 600, letterSpacing: "0.02em" }}>Mohit Aggarwal</span>
-          </p>
-        </div>
-      </aside>
+      <Sidebar 
+        ticker={ticker}
+        setTicker={setTicker}
+        runAnalysis={runAnalysis}
+        loading={loading}
+        history={history}
+        popularTickers={POPULAR_TICKERS}
+      />
 
       {/* ── Main Content ── */}
       <main style={{ flex: 1, padding: "1.75rem 2rem", overflowX: "hidden" }}>
@@ -624,16 +552,12 @@ export default function Home() {
         {/* Landing placeholder */}
         {!loading && !reportData && !error && (
           <div style={{ animation: "fadeIn 0.4s ease" }}>
-            <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--fg-muted)", marginBottom: "2rem" }}>
+            <div style={{ textAlign: "center", padding: "1.2rem 0", color: "var(--fg-muted)", marginBottom: "2rem" }}>
               <IconBarChart size={56} style={{ margin: "0 auto 1rem", color: "var(--accent)", opacity: 0.4 } as React.CSSProperties} />
               <h3 style={{ color: "var(--fg)", fontWeight: 700, marginBottom: "0.5rem" }}>
                 Enter a ticker and click Run Analysis
               </h3>
-              <p style={{ maxWidth: 480, margin: "0 auto", fontSize: "0.875rem", lineHeight: 1.7 }}>
-                The AI agent fetches live financials, retrieves 10-K risk sections from the vector store,
-                runs a deterministic DCF valuation, and generates a structured equity research report.
-                Supports US (NYSE/NASDAQ) and Indian stocks (.NS / .BO).
-              </p>
+         
             </div>
             {/* Feature grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
