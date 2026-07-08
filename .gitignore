@@ -14,6 +14,7 @@ __pycache__/
 # Project specific data & databases
 qdrant_db/
 *.sqlite3
+db/
 
 # Streamlit
 .streamlit/

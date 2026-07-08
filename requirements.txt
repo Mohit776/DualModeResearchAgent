@@ -9,6 +9,7 @@ openai
 qdrant-client
 fastembed
 onnxruntime==1.20.1
+flashrank
 
 # ================ DATA & UTILITIES ============================
 pandas
@@ -28,3 +29,4 @@ python-multipart
 
 # ================ OBSERVABILITY ================================
 logfire[fastapi,requests]
+

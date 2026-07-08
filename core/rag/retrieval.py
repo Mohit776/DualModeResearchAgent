@@ -2,6 +2,17 @@ from qdrant_client import models
 from ..observability import logfire
 from .client import get_client, COLLECTION_NAME
 from .embeddings import embed_single, build_sparse_vector
+from flashrank import Ranker, RerankRequest
+import os
+
+_ranker = None
+def get_ranker():
+    global _ranker
+    if _ranker is None:
+        # We store the models in ./db/flashrank_cache
+        os.makedirs("./db/flashrank_cache", exist_ok=True)
+        _ranker = Ranker(model_name="ms-marco-MiniLM-L-12-v2", cache_dir="./db/flashrank_cache")
+    return _ranker
 
 # ── Hybrid retrieval ─────────────────────────────────────────────────────────
 def retrieve_risks(
@@ -44,18 +55,18 @@ def retrieve_risks(
                     models.Prefetch(
                         query=dense_vec,
                         using="dense",
-                        limit=limit * 2,
+                        limit=limit * 4,
                         filter=qfilter,
                     ),
                     models.Prefetch(
                         query=sparse_vec,
                         using="sparse",
-                        limit=limit * 2,
+                        limit=limit * 4,
                         filter=qfilter,
                     ),
                 ],
                 query=models.FusionQuery(fusion=models.Fusion.RRF),
-                limit=limit,
+                limit=limit * 4,
             )
 
         hits = [
@@ -66,5 +77,22 @@ def retrieve_risks(
             }
             for hit in results.points
         ]
+        
+        with logfire.span("🗂️ flashrank.rerank", query=query):
+            if hits:
+                passages = [
+                    {"id": i, "text": h["text"], "meta": h} for i, h in enumerate(hits)
+                ]
+                rerankrequest = RerankRequest(query=query, passages=passages)
+                reranked_results = get_ranker().rerank(rerankrequest)
+                
+                # Keep top 'limit' and use their new scores
+                final_hits = []
+                for item in reranked_results[:limit]:
+                    meta = item["meta"]
+                    meta["score"] = round(float(item["score"]), 4) # Update score from reranker
+                    final_hits.append(meta)
+                hits = final_hits
+
         span.set_attribute("n_results", len(hits))
         return hits
