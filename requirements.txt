@@ -1,30 +1,37 @@
 # ================ AI & LLMs ====================================
-langchain
-langchain-text-splitters
-langgraph
-groq
-openai
+langchain # ~0.9 MB (core dependency: ~4.1 MB)
+langchain-text-splitters # ~0.2 MB
+langgraph # ~1.7 MB
+groq # ~0.9 MB
+openai # ~8.2 MB
+langchain-groq
+
 
 # ================ VECTOR DB & EMBEDDINGS ======================
-qdrant-client
-fastembed
-onnxruntime==1.20.1
-flashrank
+qdrant-client # ~3.8 MB
+fastembed # ~0.7 MB
+onnxruntime==1.20.1 # ~33.8 MB
+flashrank # ~0.1 MB
 
 # ================ DATA & UTILITIES ============================
-python-dotenv
-requests
-pydantic
+python-dotenv # ~0.2 MB
+requests # ~0.4 MB
+pydantic # ~3.1 MB (core dependency: ~5.5 MB)
 
 # ================ SCRAPING & FINANCE ==========================
-beautifulsoup4
-lxml
+beautifulsoup4 # ~0.7 MB
+lxml # ~8.7 MB
 
 # ================ API & SERVER ================================
-fastapi
-uvicorn
-python-multipart
+fastapi # ~1.3 MB
+uvicorn # ~0.5 MB
+python-multipart # ~0.2 MB
 
 # ================ OBSERVABILITY ================================
-logfire[fastapi,requests]
+logfire[fastapi,requests] # ~2.4 MB
 
+#================= Evals ===============================
+ragas
+datasets
+langchain-google-vertexai
+langchain-community<0.4.0

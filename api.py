@@ -2,6 +2,9 @@ import os
 import sys
 import io
 
+# Disable Ragas telemetry before anything else can import ragas
+os.environ["RAGAS_DO_NOT_TRACK"] = "true"
+
 # Force stdout to UTF-8 to prevent Windows terminal emoji crashes
 if sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
@@ -116,6 +119,18 @@ async def analyze_stock(req: AnalyzeRequest):
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     return chat(req)
+
+class EvalRequest(BaseModel):
+    ticker: Optional[str] = None
+
+@app.post("/api/evals/run")
+async def trigger_evals(req: EvalRequest):
+    try:
+        from core.evals.runner import run_evaluation  # lazy import — ragas loads only on first eval call
+        results = run_evaluation(ticker=req.ticker)
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,93 +1,118 @@
-# Quant Agent: Financial Intelligence Platform
+# 📈 Quant Agent — Production-Grade AI Financial Research & RAG System
 
-Quant Agent is a production-grade AI financial research assistant. It leverages advanced Retrieval-Augmented Generation (RAG) to process real-time financial data, SEC 10-K filings, and stock market information to generate institutional-grade investment theses. 
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Stateful_Agents-FF6F00?style=flat)](https://langchain-ai.github.io/langgraph/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Qdrant](https://img.shields.io/badge/Qdrant-Cloud_Vector_DB-C9252B?style=flat&logo=qdrant&logoColor=white)](https://qdrant.tech)
+[![Groq](https://img.shields.io/badge/Groq-GPT--OSS_120B-F05032?style=flat)](https://groq.com)
+[![Logfire](https://img.shields.io/badge/Logfire-Pydantic_Observability-76ABAE?style=flat)](https://logfire.pydantic.dev)
 
-Designed for AI engineering and financial analysis, it features stateful memory, multi-stage reasoning workflows, and deep observability.
+**Quant Agent** is an autonomous equity research assistant combining **LangGraph** multi-agent workflows, a production-grade **Hybrid RAG Pipeline** (Gemini Embeddings + Qdrant Cloud + FlashRank Re-ranking), deterministic **DCF & WACC Valuation engines**, and an interactive **Next.js 16 frontend** with a context-aware chatbot (**QuantBot**).
 
-## 🚀 Key Features
+It ingests SEC EDGAR 10-K filings and financial market data to generate institutional-grade investment memos complete with confidence scoring and traceable source citations.
 
-- **Multi-Source Data Ingestion:** Real-time stock data via Yahoo Finance (`yfinance`) and direct risk factor extraction from SEC EDGAR 10-K filings.
-- **Production RAG Pipeline:** Uses **Gemini Embeddings** (via direct REST API for minimal footprint) and **Qdrant Vector Database** (Cloud) for hybrid semantic search.
-- **Agentic Orchestration:** Powered by **LangGraph** to handle stateful, multi-step financial reasoning (Quant Analysis → Peer Comparison → Thesis Generation → Reflection Loop).
-- **High-Performance LLMs:** Utilises open-source models (120B parameters) powered by **Groq** for lightning-fast inference.
-- **Self-Reflecting Guardrails:** Includes a "Senior Analyst" reflection node that reviews generated theses for financial contradictions and hallucinations, looping back for corrections if necessary.
-- **Full Observability:** Deep integration with **Pydantic Logfire** for tracing LLM latency, retrieval scores, and LangGraph state changes.
-- **Memory-Augmented Chatbot:** A responsive Next.js frontend with an interactive chatbot that remembers context across sessions.
+---
+
+## 💡 System Architecture
+
+```mermaid
+flowchart TD
+    User([User / Ticker Input]) --> API[FastAPI Server]
+
+    subgraph RAG & Data Engine
+        API --> SEC[SEC EDGAR 10-K Fetcher]
+        API --> Polygon[Polygon.io Financials API]
+        SEC --> Chunk[Semantic Text Splitter]
+        Chunk --> Dense[Gemini Dense Embeddings]
+        Chunk --> Sparse[BM25 Sparse Encoder]
+        Dense & Sparse --> Qdrant[(Qdrant Cloud DB)]
+        Qdrant --> Hybrid[Hybrid Query + Metadata Filters]
+        Hybrid --> Rerank[FlashRank Cross-Encoder]
+    end
+
+    subgraph LangGraph Multi-Agent Reasoning Loop
+        Rerank --> Node1[1. Fetch Financials]
+        Node1 --> Node2[2. Analyze Financial KPIs]
+        Node2 --> Node3[3. Retrieve SEC Risks]
+        Node3 --> Node4[4. Summarize Risks]
+        Node4 --> Node5[5. Discover & Compare Peers]
+        Node5 --> Node6[6. Deterministic DCF / WACC Valuation]
+        Node6 --> Node7[7. Investment Thesis]
+        Node7 --> Node8{8. Senior Analyst Reflection}
+        Node8 -- Rejected --> Node7
+        Node8 -- Approved --> Node9[9. Confidence Scoring]
+        Node9 --> Node10[10. Final Memo Assembly]
+    end
+
+    Node10 --> UI[Next.js 16 Dashboard]
+    UI --> QuantBot[QuantBot Memory-Augmented Chatbot]
+```
+
+---
+
+## ✨ Key System Capabilities
+
+- 🔍 **Hybrid RAG Pipeline**: Combines Google Gemini dense vector embeddings (`models/gemini-embedding-2`) and BM25 sparse vectors in Qdrant Cloud DB with strict payload metadata filtering (`ticker`, `year`) to eliminate cross-stock contamination.
+- 🎯 **Neural Cross-Encoder Re-Ranking**: Integrates FlashRank (`ms-marco-TinyBERT-L-2-v2`) for second-pass context re-ranking, maximizing retrieval precision.
+- 🧮 **Deterministic Valuation Engine**: Computes Gordon Growth DCF, WACC, and a $5 \times 5$ sensitivity matrix in pure Python without LLM arithmetic guessing.
+- 🔄 **Self-Reflecting Senior Analyst Loop**: LangGraph reflection node reviews draft reports for financial contradictions and hallucinations, automatically cycling back for revisions.
+- 💬 **Context-Aware QuantBot Chatbot**: Next.js floating chatbot with active report memory and suggested questions.
+- 🔭 **Full Observability & Evals**: Pydantic Logfire tracing for latency/tokens and built-in Ragas evaluation suite (`Faithfulness` & `Response Relevancy`).
+
+---
 
 ## 🛠️ Technology Stack
 
-**Backend:**
-- Python 3.11
-- FastAPI & Uvicorn
-- LangChain & LangGraph
-- Groq Python SDK
-- Qdrant Vector DB (Cloud)
-- FastEmbed (Fallback Embeddings)
-- Pydantic Logfire
+| Category | Technologies |
+| :--- | :--- |
+| **Backend API** | Python 3.11, FastAPI, Uvicorn, Pydantic |
+| **Agent Orchestration** | LangGraph, LangChain, Groq SDK (`openai/gpt-oss-120b`) |
+| **RAG & Search** | Qdrant Cloud DB, Gemini Embeddings, FastEmbed, FlashRank Cross-Encoder |
+| **Data Sources** | SEC EDGAR 10-K (BeautifulSoup), Polygon.io API, `yfinance` |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4 |
+| **Observability & Evals** | Pydantic Logfire, Ragas Framework |
 
-**Frontend:**
-- Next.js 14 (App Router)
-- React
-- Custom CSS Variables (No Tailwind)
+---
 
-## ⚙️ Local Development Setup
 
-### 1. Clone the repository
-```bash
-git clone <your-repo-url>
-cd DualModeResearchAgent
-```
+## ⚡ Quickstart
 
-### 2. Environment Variables
-Create a `.env` file in the root directory and add the following keys:
-
+### 1. Environment Configuration
+Create a `.env` file in the root folder:
 ```env
-GROQ_API_KEY="your-groq-key"
-GROQ_FALLBACK_API_KEY="your-fallback-groq-key"
+GROQ_API_KEY="your-groq-api-key"
 GEMINI_KEY="your-gemini-api-key"
 POLYGON_API_KEY="your-polygon-api-key"
-HF_TOKEN="your-huggingface-token"
 QDRANT_API="your-qdrant-api-key"
 QDRANT_CLUSTER="your-qdrant-cluster-url"
-LOGFIRE_TOKEN="your-logfire-token"
+LOGFIRE_TOKEN="your-logfire-token" # Optional
 ```
 
-### 3. Start the Backend (FastAPI)
+### 2. Backend Setup (FastAPI)
 ```bash
-# Create and activate a virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-
-# Install dependencies
+# Linux/macOS: source venv/bin/activate | Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# Run the API server
 python api.py
 ```
-*The backend will run on `http://localhost:8000`.*
+*Runs on `http://localhost:8000`*
 
-### 4. Start the Frontend (Next.js)
+### 3. Frontend Setup (Next.js)
 ```bash
 cd web
-
-# Install dependencies
 npm install
-
-# Run the development server
 npm run dev
 ```
-*The frontend will run on `http://localhost:3000`.*
+*Runs on `http://localhost:3000`*
 
-## 🐳 Deployment (Render)
+### 4. Run Ragas Evals
+```bash
+python -m core.evals.runner
+```
 
-This project is fully configured for deployment on Render's Free Tier.
-
-1. Push your code to a GitHub repository.
-2. In Render, select **"Blueprints"** and connect your repository.
-3. Render will automatically detect the `render.yaml` and `Dockerfile`.
-4. Enter your environment variables when prompted in the Render dashboard.
-
-*Note on Free Tier:* The Render free tier has a 512MB RAM limit. The primary Gemini embeddings run via API (low memory), but if the system falls back to local `fastembed` models, it may temporarily spike memory usage.
+---
 
 ## 👤 Author
-Developed by **Mohit Aggarwal** as a demonstration of production-ready AI engineering and autonomous financial research architectures.
+Developed by **Mohit Aggarwal** as a demonstration of production-grade AI engineering, multi-agent systems, and financial RAG architectures.
+

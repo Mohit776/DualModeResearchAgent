@@ -37,7 +37,7 @@ def chat(req: ChatRequest):
         messages.append({"role": "user", "content": req.message})
 
         with logfire.span("💬 chatbot.chat", ticker=req.ticker):
-            reply = _chat(messages, temperature=0.3, json_mode=False, model="openai/gpt-oss-20b")
+            reply = _chat(messages, temperature=0.1, json_mode=False, model="openai/gpt-oss-20b")
         return {"success": True, "reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

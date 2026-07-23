@@ -121,7 +121,7 @@ export default function Sidebar({
               value={ticker || ""}
               onChange={e => setTicker(e.target.value.toUpperCase())}
               onKeyDown={e => e.key === "Enter" && runAnalysis()}
-              placeholder="e.g. AAPL, TSLA, RELIANCE.NS"
+              placeholder="e.g. AAPL, TSLA"
             />
             {/* Popular chips */}
             {popularTickers && (

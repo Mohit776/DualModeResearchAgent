@@ -1,0 +1,14 @@
+[
+    {
+        "ticker": "AAPL",
+        "filing_year": 2024,
+        "question": "What are the main risks associated with Apple?",
+        "ground_truth": "Apple faces risks related to global supply chain disruptions, reliance on key suppliers, fierce competition, and macroeconomic factors."
+    },
+    {
+        "ticker": "MSFT",
+        "filing_year": 2024,
+        "question": "What are the primary risk factors for Microsoft?",
+        "ground_truth": "Microsoft's risks include cybersecurity threats, competition in cloud computing (Azure), reliance on third-party partners, and regulatory scrutiny."
+    }
+]

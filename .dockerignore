@@ -4,3 +4,4 @@ __pycache__/
 db/
 web/node_modules/
 web/.next/
+web/*
